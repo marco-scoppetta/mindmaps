@@ -7,6 +7,8 @@ import io.mindmaps.graql.api.parser.QueryParser;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.stream.Collectors;
+
 import static spark.Spark.get;
 
 public class RestGETController {
@@ -21,19 +23,20 @@ public class RestGETController {
 
         get("/select", (req, res) -> {
             QueryParser parser = QueryParser.create(graphTransaction);
-            JSONArray response = new JSONArray();
-            parser.parseMatchQuery(req.queryParams("query")).getMatchQuery()
-                    .forEach(result ->
-                                    result.keySet()
-                                            .iterator()
-                                            .forEachRemaining(variable -> {
-                                                JSONObject jsonVariableObj = new JSONObject();
-                                                jsonVariableObj.put(variable, buildJSONObject(result.get(variable)));
-                                                response.put(jsonVariableObj);
-                                            })
-                    );
+//            JSONArray response = new JSONArray();
+//            StringBuilder queryStringResult = new StringBuilder();
+            String result = parser.parseMatchQuery(req.queryParams("query")).resultsString().collect(Collectors.joining("\n"));
+//                    .forEach(result ->
+//                                    result.keySet()
+//                                            .iterator()
+//                                            .forEachRemaining(variable -> {
+//                                                JSONObject jsonVariableObj = new JSONObject();
+//                                                jsonVariableObj.put(variable, buildJSONObject(result.get(variable)));
+//                                                response.put(jsonVariableObj);
+//                                            })
+//                    );
 
-            return response.toString();
+            return result;
         });
 
     }
