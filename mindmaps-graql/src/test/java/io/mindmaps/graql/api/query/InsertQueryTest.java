@@ -7,7 +7,7 @@ import io.mindmaps.core.implementation.Data;
 import io.mindmaps.core.model.Concept;
 import io.mindmaps.core.model.EntityType;
 import io.mindmaps.example.MovieGraphFactory;
-import io.mindmaps.factory.MindmapsTinkerGraphFactory;
+import io.mindmaps.factory.MindmapsTestGraphFactory;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,7 +33,7 @@ public class InsertQueryTest {
 
     @Before
     public void setUp() {
-        MindmapsGraph mindmapsGraph = MindmapsTinkerGraphFactory.getInstance().newGraph();
+        MindmapsGraph mindmapsGraph = MindmapsTestGraphFactory.newEmptyGraph();
         MovieGraphFactory.loadGraph(mindmapsGraph);
         transaction = mindmapsGraph.newTransaction();
         qb = QueryBuilder.build(transaction);
@@ -360,6 +360,14 @@ public class InsertQueryTest {
     }
 
     @Test
+    public void testInsertResourceTypeAndInstance() {
+        qb.insert(
+                var("x").isa("movie").has("my-resource", "look a string"),
+                var().id("my-resource").isa("resource-type").datatype(Data.STRING).playsRole("has-resource-value")
+        ).execute();
+    }
+
+    @Test
     public void testErrorWhenInsertRelationWithEmptyRolePlayer() {
         exception.expect(IllegalStateException.class);
         exception.expectMessage(
@@ -387,6 +395,13 @@ public class InsertQueryTest {
                 allOf(containsString("meta-type"), containsString("my-thing"), containsString(RELATION_TYPE.getId()))
         );
         qb.insert(id("my-thing").ako(RELATION_TYPE.getId())).execute();
+    }
+
+    @Test
+    public void testErrorRecursiveType() {
+        exception.expect(IllegalStateException.class);
+        exception.expectMessage(allOf(containsString("thingy"), containsString("itself")));
+        qb.insert(id("thingy").isa("thingy")).execute();
     }
 
     private void assertInsert(Var... vars) {

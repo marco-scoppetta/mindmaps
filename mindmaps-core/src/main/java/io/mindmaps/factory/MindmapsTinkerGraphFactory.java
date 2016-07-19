@@ -3,18 +3,9 @@ package io.mindmaps.factory;
 import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.core.implementation.MindmapsTinkerGraph;
 
-public class MindmapsTinkerGraphFactory implements MindmapsGraphFactory {
-    private static MindmapsTinkerGraphFactory factoryInstance;
+class MindmapsTinkerGraphFactory implements MindmapsGraphFactory {
+    public MindmapsTinkerGraphFactory(){
 
-    private MindmapsTinkerGraphFactory(){
-
-    }
-
-    public static MindmapsGraphFactory getInstance(){
-        if(factoryInstance == null){
-            factoryInstance = new MindmapsTinkerGraphFactory();
-        }
-        return factoryInstance;
     }
 
     @Override

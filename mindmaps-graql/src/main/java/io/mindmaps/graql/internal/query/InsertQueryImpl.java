@@ -29,6 +29,7 @@ public class InsertQueryImpl implements InsertQuery.Admin {
     private final Map<String, List<Var.Admin>> varsByName;
     private final Map<String, List<Var.Admin>> varsById;
     private Map<String, Concept> concepts = new HashMap<>();
+    private Stack<String> visitedVars = new Stack<>();
 
     private RelationType hasResource = null;
     private RoleType hasResourceTarget = null;
@@ -155,7 +156,15 @@ public class InsertQueryImpl implements InsertQuery.Admin {
      * @return the same as addConcept, but using an internal map to remember previous calls
      */
     private Concept getConcept(Var.Admin var) {
-        return concepts.computeIfAbsent(var.getName(), n -> addConcept(var));
+        String name = var.getName();
+        if (visitedVars.contains(name)) {
+            throw new IllegalStateException(ErrorMessage.INSERT_RECURSIVE.getMessage(var.getPrintableName()));
+        }
+
+        visitedVars.push(name);
+        Concept concept = concepts.computeIfAbsent(name, n -> addConcept(var));
+        visitedVars.pop();
+        return concept;
     }
 
     /**
@@ -339,14 +348,14 @@ public class InsertQueryImpl implements InsertQuery.Admin {
     /**
      * Add resources to the given instance, using the has-resource relation
      * @param instance the instance to add resources to
-     * @param name the name of the resource type
+     * @param resourceType the variable representing the resource type
      * @param values a set of values to set on the resource instances
      * @param <D> the type of the resources
      */
-    private <D> void addResources(Instance instance, String name, Set<D> values) {
+    private <D> void addResources(Instance instance, Var.Admin resourceType, Set<D> values) {
         // We assume the resource type has the correct datatype. If it does not, core will catch the problem
         //noinspection unchecked
-        ResourceType<D> type = transaction.getResourceType(name);
+        ResourceType<D> type = getConcept(resourceType).asResourceType();
         values.forEach(value -> addResource(instance, type, value));
     }
 

@@ -28,7 +28,8 @@
         <spark-core.version>2.5</spark-core.version>
         <json.version>20160212</json.version>
         <halbuilder-standard.version>4.0.1</halbuilder-standard.version>
-
+        <rest-assured.version>2.7.0</rest-assured.version>
+        <jinjava.version>2.1.0</jinjava.version>
         <antlr4.visitor>true</antlr4.visitor>
     </properties>
 

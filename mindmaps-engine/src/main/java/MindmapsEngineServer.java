@@ -1,9 +1,9 @@
-import api.GraphFactoryController;
-import api.ImportFromFile;
-import api.RestGETController;
-import api.VisualiserController;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import io.mindmaps.api.GraphFactoryController;
+import io.mindmaps.api.ImportFromFile;
+import io.mindmaps.api.RestGETController;
+import io.mindmaps.api.VisualiserController;
 import spark.Spark;
 import webapp.Dashboard;
 import webapp.GraqlShell;
