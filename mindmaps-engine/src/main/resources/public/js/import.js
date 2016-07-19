@@ -9,7 +9,7 @@ $(function() {
     $( "#loadfile" ).click(function(){
         console.log("FILE PATH "+$("#importFilePath").val());
 
-        post("http://localhost:4567/importFile/","{\"path\":\""+$("#importFilePath").val()+"\"}",
+        post("http://"+$(location).attr('host')+"/importFile/","{\"path\":\""+$("#importFilePath").val()+"\"}",
             function(){
             console.log("response "+data);
         });

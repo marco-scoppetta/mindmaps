@@ -20,6 +20,8 @@ public class RestGETController {
 
         get("/select", (req, res) -> {
             QueryParser parser = QueryParser.create(graphTransaction);
+            System.out.println("RECEIVED SELECT QUERY "+req.queryParams("query"));
+
             return parser.parseMatchQuery(req.queryParams("query")).resultsString()
                     .map(x -> x.replaceAll("\u001B\\[\\d+[m]", ""))    // instead of replacing use the code in the web page to highlight the syntax
                     .collect(Collectors.joining("\n"));
