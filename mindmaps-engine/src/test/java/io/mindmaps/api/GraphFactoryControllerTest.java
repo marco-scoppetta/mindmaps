@@ -20,14 +20,14 @@ public class GraphFactoryControllerTest {
     }
 
     @Test
-    public void testConfigWorking(){
+    public void testConfigWorking() {
         Response response = get("/graph_factory").then().statusCode(200).extract().response().andReturn();
         String config = response.getBody().prettyPrint();
         assertTrue(config.contains("factory"));
     }
 
     @Test
-    public void testMindmapsClient(){
+    public void testMindmapsClient() {
         MindmapsGraph graph = MindmapsClient.newGraph();
         assertNotEquals(0, graph.getGraph().traversal().V().toList().size());
         graph.close();
