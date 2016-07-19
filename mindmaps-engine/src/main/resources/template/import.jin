@@ -26,11 +26,8 @@
 
      <link href="/css/mdb.css" rel="stylesheet" type="text/css" />
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-
-
-        <script type="text/javascript" src="/js/node_modules/vis.js"></script>
-        <link href="/css/vis.css" rel="stylesheet" type="text/css" />
-        <script type="text/javascript" src="/js/mindmaps_vis.js"></script>  </head>
+     <script type="text/javascript" src="/js/import.js"></script>
+  </head>
 
   <body>
 
@@ -67,17 +64,13 @@
       </div>
        <div class="row">
               <div class="col-md-3"></div>
-              <div class="col-md-6 text-center"><h1>VISUALISER</h1></div>
+              <div class="col-md-6 text-center"><h1>IMPORT FROM GRAQL FILE</h1></div>
               <div class="col-md-3"></div>
        </div>
       <div class="row" style="margin-top:30px; border-top: thick;">
-        <div class="col-md-12"><div id="mynetwork" oncontextmenu="return false;"></div>
-                                          <form id="search-form">
-                                              Search
-                                              <input type="text" id="search"/>
-                                          </form>
-
-                                          <button id="load-all">Emergency Override</button></div>
+        <div class="col-md-3 text-right">ENTER FILE PATH:</div>
+        <div class="col-md-6"><input type="text" name="file_path" id="importFilePath" value=""></div>
+        <div class="col-md-3"><button type="button" class="btn btn-success" id="loadfile">Load</button> </div>
       </div>
       <footer class="footer">
       </footer>

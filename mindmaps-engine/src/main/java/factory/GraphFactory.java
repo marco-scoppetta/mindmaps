@@ -10,7 +10,7 @@ import java.util.Properties;
 
 public class GraphFactory {
 
-    private String CONFIG;
+    private String graphConfig;
 
     private int idBlockSize;
 
@@ -26,6 +26,10 @@ public class GraphFactory {
         return instance;
     }
 
+    public String getGraphConfig() {
+        return graphConfig;
+    }
+
     private GraphFactory() {
 
 //        LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
@@ -38,8 +42,8 @@ public class GraphFactory {
         try {
             prop.load(getClass().getClassLoader().getResourceAsStream("application.properties"));
             idBlockSize = Integer.parseInt(prop.getProperty("graph.block-size"));
-            CONFIG = prop.getProperty("graphdatabase.config");
-            System.out.println("hello config " + CONFIG);
+            graphConfig = prop.getProperty("graphdatabase.config");
+            System.out.println("hello config " + graphConfig);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -47,13 +51,13 @@ public class GraphFactory {
     }
 
     public MindmapsTransactionImpl buildMindmapsGraphBatchLoading() {
-        MindmapsTransactionImpl graph = buildGraph(CONFIG);
+        MindmapsTransactionImpl graph = buildGraph(graphConfig);
         graph.enableBatchLoading();
         return graph;
     }
 
     public MindmapsTransactionImpl buildMindmapsGraph() {
-        return buildGraph(CONFIG);
+        return buildGraph(graphConfig);
     }
 
     private synchronized MindmapsTransactionImpl buildGraph(String config) {

@@ -1,5 +1,7 @@
 package api;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import factory.GraphFactory;
 import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.core.exceptions.MindmapsValidationException;
@@ -9,6 +11,7 @@ import io.mindmaps.graql.api.parser.QueryParser;
 import io.mindmaps.graql.api.query.Var;
 import loader.Loader;
 import loader.QueueManager;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -23,6 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
+import static spark.Spark.post;
 
 public class ImportFromFile {
 
@@ -30,7 +34,7 @@ public class ImportFromFile {
     //Todo:
     // - we add entities to cache before trying to commit. A lot of optimism here
     // - think about how to escape the semi-colon: value "djnjsdk; eoine;"; $person .... this will not work correctly -> Felix should be implementing a feature that allows to read one Pattern at the time given an InputStream
-    //
+
 
     private final int batchSize = 60;
     private final int sleepTime = 100;
@@ -43,10 +47,20 @@ public class ImportFromFile {
 
 
     public ImportFromFile() {
+        Logger logger = (Logger) org.slf4j.LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        logger.setLevel(Level.INFO);
         entitiesMap = new ConcurrentHashMap<>();
         relationshipsList = new ArrayList<>();
         loader = Loader.getInstance();
         queueManager = QueueManager.getInstance();
+
+       post("/importFile/",(req,res)->{
+           JSONObject bodyObject = new JSONObject(req.body());
+           System.out.println("PATHHH " + bodyObject.get("path"));
+           importGraph(bodyObject.get("path").toString());
+           return "ok";
+       });
+
     }
 
     public void importGraph(String dataFile) {

@@ -14,7 +14,7 @@ import static spark.Spark.get;
 public class GraphFactoryController {
     private final Logger LOG = LoggerFactory.getLogger(GraphFactoryController.class);
 
-    private final String GRAPH_CONFIG;
+    private final String graphConfig;
 
     public GraphFactoryController() {
         Properties prop = new Properties();
@@ -24,14 +24,14 @@ public class GraphFactoryController {
             e.printStackTrace();
         }
 
-        GRAPH_CONFIG=prop.getProperty("graphdatabase.config");
+        graphConfig =prop.getProperty("graphdatabase.config");
 
         get("/graph_factory", (req, res) -> {
             try {
-                return new String(Files.readAllBytes(Paths.get(GRAPH_CONFIG)));
+                return new String(Files.readAllBytes(Paths.get(graphConfig)));
             } catch (IOException e) {
-                LOG.error("Cannot find config file [" + GRAPH_CONFIG + "]", e);
-                throw new IOException("Cannot find config file [" + GRAPH_CONFIG + "]");
+                LOG.error("Cannot find config file [" + graphConfig + "]", e);
+                throw new IOException("Cannot find config file [" + graphConfig + "]");
             }
         });
 

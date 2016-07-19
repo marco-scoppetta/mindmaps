@@ -4,10 +4,7 @@ import core.BackgroundTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,8 +12,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class QueueManager {
     private final Logger LOG = LoggerFactory.getLogger(QueueManager.class);
-    private int NUM_THREADS = 20; // load from config file
-    private int MAINTENANCE_ITERATION = 3; // load from config file
+    private int NUM_THREADS;
+    private int MAINTENANCE_ITERATION;
     private AtomicBoolean maintenanceInProcess;
     private AtomicInteger currentJobs;
     private AtomicInteger finishedJobs;
@@ -51,6 +48,17 @@ public class QueueManager {
     }
 
     private QueueManager() {
+
+        Properties prop = new Properties();
+        try {
+            prop.load(getClass().getClassLoader().getResourceAsStream("application.properties"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        MAINTENANCE_ITERATION = Integer.parseInt(prop.getProperty("engine.maintenance-iteration"));
+        NUM_THREADS = Integer.parseInt(prop.getProperty("engine.threads"));
+
         maintenanceInProcess = new AtomicBoolean(false);
         currentJobs = new AtomicInteger(0);
         finishedJobs = new AtomicInteger(0);
@@ -168,7 +176,7 @@ public class QueueManager {
         currentJobs.decrementAndGet();
 
         synchronized (BackgroundTasks.getInstance()) {
-            BackgroundTasks.getInstance().notify();   // why dont we synchronise the notify method?
+            BackgroundTasks.getInstance().notify();
         }
 
         lastJobFinished.set(System.currentTimeMillis());
