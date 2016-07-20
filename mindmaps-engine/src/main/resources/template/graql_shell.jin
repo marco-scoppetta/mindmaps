@@ -87,7 +87,7 @@
     </div>
     <div class="row query-row" style="margin-top:10px;">
         <div class="col-md-3 text-right">Graql query:</div>
-        <div class="col-md-6"><textarea class="form-control" rows="3" id="graql-string"
+        <div class="col-md-6"><textarea class="form-control" rows="2" id="graql-string"
                                         style="padding-left: 10px;"></textarea></div>
         <div class="col-md-3">
         </div>
@@ -96,6 +96,14 @@
         <div class="col-md-3"></div>
         <div class="col-md-6 text-right">
             <button type="button" class="btn btn-success" id="sendquery">Send</button>
+        </div>
+        <div class="col-md-3">
+        </div>
+    </div>
+    <div class="row query-error-row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            <div class="alert alert-danger" role="alert" id="query-error"></div>
         </div>
         <div class="col-md-3">
         </div>
