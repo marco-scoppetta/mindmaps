@@ -36,7 +36,7 @@
 
     <div class="header clearfix">
 
-        <nav class="navbar mdb-color">
+        <nav class="navbar rgba-white-slight">
             <div class="container-fluid">
 
                 <div class="navbar-header">
@@ -76,39 +76,74 @@
         </nav>
 
     </div>
-    <div class="row">
-        <div class="col-md-3"></div>
-        <div class="col-md-6 text-center"><h2>GRAQL SHELL</h2></div>
-        <div class="col-md-3">
-            <button type="button" class="btn btn-default" id="toggler">
-                <span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span>
-            </button>
-        </div>
-    </div>
+
+    <!-- ROW WITH GRAQL QUERY INPUT BOX  -->
     <div class="row query-row" style="margin-top:10px;">
-        <div class="col-md-3 text-right">Graql query:</div>
-        <div class="col-md-6"><textarea class="form-control" rows="2" id="graql-string"
-                                        style="padding-left: 10px;"></textarea></div>
-        <div class="col-md-3">
+        <div class="col-md-3 text-right" style="vertical-align:top;"></div>
+        <div class="col-md-6" style="padding-right: 0px;"><textarea class="form-control" rows="1" id="graql-string"
+                                                                    style="padding-left: 10px;"
+                                                                    placeholder="Query example: match $x isa entity-type"></textarea>
+        </div>
+        <div class="col-md-1" style="padding-left: 0px;">
+            <button type="button" class="btn btn-success btn-lg" id="sendquery" style="margin-top: 2px;">Send <span
+                    class="glyphicon glyphicon-send" aria-hidden="true"></span></button>
+        </div>
+        <div class="col-md-1 text-right" style="padding-left: 0px;">
+            <button type="button" class="btn" id="toggler" style="margin-top: 2px;"> <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span></button>
         </div>
     </div>
-    <div class="row query-row">
-        <div class="col-md-3"></div>
-        <div class="col-md-6 text-right">
-            <button type="button" class="btn btn-success" id="sendquery">Send</button>
+    <!-- ROWS LISTING ENTITIES IN THE GRAPH  -->
+    <fieldset>
+        <legend class="meta-list-legend">Entities</legend>
+        <div class="row">
+            <!--<div class="col-md-2 text-right">ENTITIES:</div>-->
+            <div class="col-md-12" id="entities-list"></div>
+            <!--<div class="col-md-2"></div>-->
         </div>
-        <div class="col-md-3">
+    </fieldset>
+    <fieldset>
+        <legend class="meta-list-legend">Relations</legend>
+        <div class="row">
+            <!--<div class="col-md-2 text-right">RELATIONS:</div>-->
+            <div class="col-md-12" id="relations-list"></div>
+            <!--<div class="col-md-2"></div>-->
         </div>
-    </div>
-    <div class="row query-error-row">
+    </fieldset>
+    <fieldset>
+        <legend class="meta-list-legend">Resources</legend>
+        <div class="row">
+            <!--<div class="col-md-2 text-right">RESOURCES:</div>-->
+            <div class="col-md-12" id="resources-list"></div>
+            <!--<div class="col-md-2"></div>-->
+        </div>
+    </fieldset>
+    <fieldset>
+        <legend class="meta-list-legend">Roles</legend>
+        <div class="row">
+            <!--<div class="col-md-2 text-right">ROLES TYPES:</div>-->
+            <div class="col-md-12" id="roles-list"></div>
+            <!--<div class="col-md-2"></div>-->
+        </div>
+    </fieldset>
+
+    <!-- ROW USED TO SHOW ERRORS  -->
+    <div class="row" id="query-error-row">
         <div class="col-md-3"></div>
         <div class="col-md-6">
-            <div class="alert alert-danger" role="alert" id="query-error"></div>
+            <div class="row">
+                <div class="col-md-10 alert alert-danger" role="alert"><span class="glyphicon glyphicon-warning-sign"
+                                                                             aria-hidden="true"></span><span><strong>
+                    Error:</strong> </span><span id="query-error"></span></div>
+                <div class="col-md-2">
+                    <button type="button" class="btn" id="close-error">X</button>
+                </div>
+            </div>
         </div>
         <div class="col-md-3">
         </div>
     </div>
-    <textarea class="form-control" rows="25" id="graql-result"></textarea>
+    <!-- TEXTAREA FOR GRAQL RESULTS  -->
+    <textarea class="form-control" rows="20" id="graql-result" style="padding-left: 10px;"></textarea>
 
 
 </div>
@@ -118,12 +153,6 @@
      role="dialog" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title">
-                    <span class="glyphicon glyphicon-time">
-                    </span>Graql query in progress.
-                </h4>
-            </div>
             <div class="modal-body">
                 <div class="progress">
                     <div class="progress-bar progress-bar-info

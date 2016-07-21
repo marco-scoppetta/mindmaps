@@ -36,7 +36,7 @@ public class BackgroundTasks {
     }
 
     private BackgroundTasks() {
-        conceptFixer = new ConceptFixer(cache, GraphFactory.getInstance());
+        conceptFixer = new ConceptFixer(cache);
         postpool = Executors.newFixedThreadPool(NUM_THREADS);
         statDump = Executors.newSingleThreadExecutor();
         cache = Cache.getInstance();

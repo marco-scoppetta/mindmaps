@@ -1,5 +1,6 @@
 package io.mindmaps.core;
 
+import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.core.model.Concept;
 import io.mindmaps.core.model.Relation;
@@ -13,28 +14,28 @@ import java.util.Set;
 class ConceptFixer {
     private final Logger LOG = LoggerFactory.getLogger(ConceptFixer.class);
     private final Cache cache;
-    private final GraphFactory daoFactory;
+    private final MindmapsGraph graph;
 
-    public ConceptFixer(Cache c, GraphFactory graphDAOFactory){
+    public ConceptFixer(Cache c){
         cache = c;
-        daoFactory = graphDAOFactory;
+        graph = GraphFactory.getInstance().buildMindmapsGraph();
     }
 
     public String createAssertionHashCode(String assertionId) {
         String code = "";
-        MindmapsTransactionImpl graph = daoFactory.buildMindmapsGraph();
-        Relation relation = graph.getRelation(assertionId);
+        MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) graph.newTransaction();
+        Relation relation = transaction.getRelation(assertionId);
         if(relation != null){
-            code = graph.getUniqueRelationId(relation);
+            code = transaction.getUniqueRelationId(relation);
         }
-        closeGraph(graph);
+        closeGraph(transaction);
         return code;
     }
 
     public void deleteDuplicateAssertion(Long assertionId){
-        MindmapsTransactionImpl graph = daoFactory.buildMindmapsGraph();
-        graph.getTinkerPopGraph().traversal().V(assertionId).next().remove();
-        commitGraph(graph);
+        MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) graph.newTransaction();
+        transaction.getTinkerPopGraph().traversal().V(assertionId).next().remove();
+        commitGraph(transaction);
     }
 
     public void fixElements(String conceptType, String key, Long... newDegree){
@@ -64,13 +65,16 @@ class ConceptFixer {
     }
 
     private boolean fixCastings(String type, String key){
-        MindmapsTransactionImpl graph = daoFactory.buildMindmapsGraphBatchLoading();
+
+        //this transaction used to be open with batch loading enabled, is it necessary?? ask Filipe
+
+        MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) graph.newTransaction();
         boolean commitNeeded = false;
         Set<String> castingIds = cache.getCastingJobs().get(type).get(key);
         Set<Concept> castings = new HashSet<>();
 
         for (String baseId : castingIds) {
-            Concept concept = graph.getConcept(baseId);
+            Concept concept = transaction.getConcept(baseId);
             if(concept != null) {
                 castings.add(concept);
             }
@@ -79,14 +83,14 @@ class ConceptFixer {
         if (castings.size() >= 2) {
             LOG.info("Duplicate castings found and being merged.");
             commitNeeded = true;
-            graph.mergeCastings(castings);
+            transaction.mergeCastings(castings);
         }
 
         if(commitNeeded){
-            if(!commitGraph(graph))
+            if(!commitGraph(transaction))
                 return false;
         } else {
-            closeGraph(graph);
+            closeGraph(transaction);
         }
 
         cache.deleteJobCasting(type, key);

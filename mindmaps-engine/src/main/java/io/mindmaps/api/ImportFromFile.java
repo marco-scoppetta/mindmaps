@@ -2,6 +2,8 @@ package io.mindmaps.api;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import io.mindmaps.core.dao.MindmapsGraph;
+import io.mindmaps.core.dao.MindmapsTransaction;
 import io.mindmaps.core.exceptions.MindmapsValidationException;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
@@ -42,15 +44,22 @@ public class ImportFromFile {
     ArrayList<Var> relationshipsList;
 
     private Loader loader;
-    QueueManager queueManager;
+    private QueueManager queueManager;
+    private MindmapsGraph graph;
 
 
-    public ImportFromFile() {
+
+    public ImportFromFile(){
+        new ImportFromFile(GraphFactory.getInstance().buildMindmapsGraphBatchLoading());
+    }
+
+    public ImportFromFile(MindmapsGraph initGraph) {
         Logger logger = (Logger) org.slf4j.LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         logger.setLevel(Level.INFO);
+        graph = initGraph;
         entitiesMap = new ConcurrentHashMap<>();
         relationshipsList = new ArrayList<>();
-        loader = Loader.getInstance();
+        loader = new Loader(initGraph);
         queueManager = QueueManager.getInstance();
 
         post("/importFile/", (req, res) -> {
@@ -182,31 +191,16 @@ public class ImportFromFile {
 
     }
 
-    private void clearGraph() {
-
-        MindmapsTransactionImpl mindmapsGraph = GraphFactory.getInstance().buildMindmapsGraph();
-        System.out.println("=============  ABOUT TO CLEAR THE GRAPH ==============");
-
-        mindmapsGraph.clearGraph();
-
-        try {
-            mindmapsGraph.commit();
-            System.out.println("=============  GRAPH CLEARED ==============");
-
-        } catch (MindmapsValidationException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void loadOntology(String ontologyFile) {
 
-        MindmapsTransactionImpl mindmapsGraph = GraphFactory.getInstance().buildMindmapsGraph();
+        MindmapsTransactionImpl transaction = (MindmapsTransactionImpl)graph.newTransaction();
         try {
+            System.out.println("============  LOADING ONTOLOGY ==============");
 
             List<String> lines = Files.readAllLines(Paths.get(ontologyFile), StandardCharsets.UTF_8);
             String query = lines.stream().reduce("", (s1, s2) -> s1 + "\n" + s2);
-            QueryParser.create(mindmapsGraph).parseInsertQuery(query).execute();
-            mindmapsGraph.commit();
+            QueryParser.create(transaction).parseInsertQuery(query).execute();
+            transaction.commit();
 
             System.out.println("=============  ONTOLOGY LOADED ==============");
         } catch (Exception e) {

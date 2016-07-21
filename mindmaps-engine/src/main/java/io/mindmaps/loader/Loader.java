@@ -1,6 +1,8 @@
 package io.mindmaps.loader;
 
 import io.mindmaps.core.Cache;
+import io.mindmaps.core.dao.MindmapsGraph;
+import io.mindmaps.core.dao.MindmapsTransaction;
 import io.mindmaps.core.exceptions.MindmapsValidationException;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
@@ -27,16 +29,23 @@ public class Loader {
     private ExecutorService flushToCache;
     private static final int REPEAT_COMMITS = 5;
     private static Loader instance = null;
+    private MindmapsGraph graph;
 
-    public static synchronized Loader getInstance() {
-        if (instance == null) instance = new Loader();
-        return instance;
+//    public static synchronized Loader getInstance() {
+//        if (instance == null) instance = new Loader();
+//        return instance;
+//    }
+
+
+    public Loader(){
+        new Loader(GraphFactory.getInstance().buildMindmapsGraphBatchLoading());
     }
 
-    private Loader() {
+    public Loader(MindmapsGraph initGraph) {
         flushToCache = Executors.newFixedThreadPool(10);
         queueManager = QueueManager.getInstance();
         cache = Cache.getInstance();
+        graph = initGraph;
     }
 
     private interface LoadableBatch {
@@ -69,6 +78,7 @@ public class Loader {
         }
     }
 
+
     public UUID addJob(String queryString) {
         return queueManager.addJob(() -> loadData(new loadableString(queryString)));
     }
@@ -83,20 +93,20 @@ public class Loader {
         // Attempt committing the transaction a certain number of times
         // If a transaction fails, it must be repeated from scratch because Titan is forgetful
         for (int i = 0; i < REPEAT_COMMITS; i++) {
-            MindmapsTransactionImpl gam = GraphFactory.getInstance().buildMindmapsGraphBatchLoading();
+            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl)graph.newTransaction();
             try {
 
-                batch.load(gam);
+                batch.load(transaction);
 
                 if (Thread.currentThread().isInterrupted()) {
                     errors.add("Transaction cancelled");
                     return errors;
                 }
 
-                Map<String, Map<String, Set<String>>> castingIds = gam.getModifiedCastingIds();
-                Map<String, Set<String>> relationIds = gam.getModifiedRelationIds();
+                Map<String, Map<String, Set<String>>> castingIds = transaction.getModifiedCastingIds();
+                Map<String, Set<String>> relationIds = transaction.getModifiedRelationIds();
 
-                gam.commit();
+                transaction.commit();
 
                 //flush to cache for post processing
                 if (errors.isEmpty()) {
@@ -111,7 +121,7 @@ public class Loader {
                 continue;
             } finally {
                 try {
-                    gam.close();
+                    transaction.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

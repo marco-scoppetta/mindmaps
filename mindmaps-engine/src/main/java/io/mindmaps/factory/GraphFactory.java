@@ -1,5 +1,6 @@
 package io.mindmaps.factory;
 
+import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 
@@ -41,28 +42,29 @@ public class GraphFactory {
             prop.load(getClass().getClassLoader().getResourceAsStream("application.properties"));
             idBlockSize = Integer.parseInt(prop.getProperty("graph.block-size"));
             graphConfig = prop.getProperty("graphdatabase.config");
-            System.out.println("hello config " + graphConfig);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
 
-    public MindmapsTransactionImpl buildMindmapsGraphBatchLoading() {
-        MindmapsTransactionImpl graph = buildGraph(graphConfig);
-        graph.enableBatchLoading();
+    public MindmapsGraph buildMindmapsGraphBatchLoading() {
+        MindmapsGraph graph = buildGraph(graphConfig);
+        graph.newTransaction().enableBatchLoading();
         return graph;
     }
 
-    public MindmapsTransactionImpl buildMindmapsGraph() {
+    public MindmapsGraph buildMindmapsGraph() {
         return buildGraph(graphConfig);
     }
 
-    private synchronized MindmapsTransactionImpl buildGraph(String config) {
+    private synchronized MindmapsGraph buildGraph(String config) {
 
-        MindmapsTransactionImpl mindmapsGraph = (MindmapsTransactionImpl) titanGraphFactory.newGraph(config).newTransaction();
-        Graph graph = mindmapsGraph.getTinkerPopGraph();
-        graph.configuration().setProperty("ids.block-size", idBlockSize);
+        MindmapsGraph mindmapsGraph = titanGraphFactory.newGraph(config);
+
+        // ASK FILIPE!
+//        Graph graph = mindmapsGraph.newTransaction().gett .getTinkerPopGraph();
+//        graph.configuration().setProperty("ids.block-size", idBlockSize);
 
         return mindmapsGraph;
     }
