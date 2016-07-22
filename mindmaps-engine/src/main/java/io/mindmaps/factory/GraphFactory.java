@@ -62,9 +62,8 @@ public class GraphFactory {
 
         MindmapsGraph mindmapsGraph = titanGraphFactory.newGraph(config);
 
-        // ASK FILIPE!
-//        Graph graph = mindmapsGraph.newTransaction().gett .getTinkerPopGraph();
-//        graph.configuration().setProperty("ids.block-size", idBlockSize);
+        Graph graph = mindmapsGraph.getGraph();
+        graph.configuration().setProperty("ids.block-size", idBlockSize);
 
         return mindmapsGraph;
     }

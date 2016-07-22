@@ -194,6 +194,7 @@ public class ImportFromFile {
     public void loadOntology(String ontologyFile) {
 
         MindmapsTransactionImpl transaction = (MindmapsTransactionImpl)graph.newTransaction();
+
         try {
             System.out.println("============  LOADING ONTOLOGY ==============");
 
