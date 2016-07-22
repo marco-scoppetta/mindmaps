@@ -21,11 +21,8 @@ public class ImportFromFileTest {
 
     @Test
     public void testLoadOntologyAndData() {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource("ldbc-snb-ontology.gql").getFile());
-        importer.loadOntology(file.getAbsolutePath());
-        file= new File(classLoader.getResource("ldbc-snb-data.gql").getFile());
-        importer.importGraph(file.getAbsolutePath());
+        importer.loadOntology(getClass().getClassLoader().getResource("ldbc-snb-ontology.gql").getPath());
+        importer.importGraph(getClass().getClassLoader().getResource("ldbc-snb-data.gql").getPath());
     }
 
 }
