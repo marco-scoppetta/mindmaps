@@ -3,8 +3,6 @@ package io.mindmaps.api;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import io.mindmaps.core.dao.MindmapsGraph;
-import io.mindmaps.core.dao.MindmapsTransaction;
-import io.mindmaps.core.exceptions.MindmapsValidationException;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.parser.QueryParser;
@@ -12,6 +10,7 @@ import io.mindmaps.graql.api.query.Var;
 import io.mindmaps.loader.Loader;
 import io.mindmaps.loader.QueueManager;
 import org.json.JSONObject;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -20,10 +19,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
 
@@ -31,14 +27,13 @@ import static spark.Spark.post;
 
 public class ImportFromFile {
 
+    private final org.slf4j.Logger LOG = LoggerFactory.getLogger(ImportFromFile.class);
+    private final String BATCH_SIZE_PROPERTY = "importFromFile.batch-size";
+    private final String SLEEP_TIME_PROPERTY = "importFromFile.sleep-time";
 
-    //Todo:
-    // - we add entities to cache before trying to commit. A lot of optimism here
-    // - think about how to escape the semi-colon: value "djnjsdk; eoine;"; $person .... this will not work correctly -> Felix should be implementing a feature that allows to read one Pattern at the time given an InputStream
 
-
-    private final int batchSize = 60;
-    private final int sleepTime = 100;
+    private int batchSize;
+    private int sleepTime;
 
     Map<String, String> entitiesMap;
     ArrayList<Var> relationshipsList;
@@ -48,31 +43,42 @@ public class ImportFromFile {
     private MindmapsGraph graph;
 
 
-
     public ImportFromFile(){
         new ImportFromFile(GraphFactory.getInstance().buildMindmapsGraphBatchLoading());
     }
 
     public ImportFromFile(MindmapsGraph initGraph) {
+
+
+        //change this
         Logger logger = (Logger) org.slf4j.LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         logger.setLevel(Level.INFO);
+
+        Properties prop = new Properties();
+        try {
+            prop.load(getClass().getClassLoader().getResourceAsStream("application.properties"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         graph = initGraph;
         entitiesMap = new ConcurrentHashMap<>();
         relationshipsList = new ArrayList<>();
         loader = new Loader(initGraph);
         queueManager = QueueManager.getInstance();
+        batchSize = Integer.parseInt(prop.getProperty(BATCH_SIZE_PROPERTY));
+        sleepTime = Integer.parseInt(prop.getProperty(SLEEP_TIME_PROPERTY));
+
 
         post("/importFile/", (req, res) -> {
             JSONObject bodyObject = new JSONObject(req.body());
-            System.out.println("PATHHH " + bodyObject.get("path"));
-            importGraph(bodyObject.get("path").toString());
+            importDataFromFile(bodyObject.get("path").toString());
             return "ok";
         });
 
     }
 
-    public void importGraph(String dataFile) {
-        System.out.println("LOAD GRAPH FROM GRAQL FILE!");
+    public void importDataFromFile(String dataFile) {
 
         BiPredicate<String, List<Var>> parseEntity = this::parseEntity;
         BiPredicate<String, List<Var>> parseRelation = this::parseRelation;
@@ -93,16 +99,17 @@ public class ImportFromFile {
         String line;
         List<Var> currentVarsBatch = new ArrayList<>();
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dataFile)));
+
+        // Instead of reading one line at the time, in the future we will have a
+        // Graql method that given an input stream provides .nextPattern.
+
         while ((line = bufferedReader.readLine()) != null) {
             if (line.startsWith("insert")) line = line.substring(6);
 
-//            for (String command : line.split(";")) // we cannot use the split function
-//                if (command.length() > 0 && !command.startsWith("#") && parser.test(command, currentVarsBatch))
-//                    i++;
+            //Backoff for 10 seconds if the queueManager cannot load fast enough.
+            //Try to implement something more dynamic. (e.g. Congestion avoidance algorithm)
 
             while (queueManager.getTotalJobs() - queueManager.getFinishedJobs() - queueManager.getErrorJobs() > 100) {
-                //like in TCP protocol, every time we have to wait this time to let time to the loader to  catch up on the workload, we should increase the sleeping time between one batch and the other!
-                // and slowly decrease it again as the time goes by
                 try {
                     Thread.sleep(10000);
                 } catch (InterruptedException e) {
@@ -110,26 +117,30 @@ public class ImportFromFile {
                 }
             }
 
+            //Skip empty lines && comments
             if (line.length() > 0 && !line.startsWith("#") && parser.test(line, currentVarsBatch))
                 i++;
 
             if (i % batchSize == 0 && latestBatchNumber != i) {
                 latestBatchNumber = i;
-                loadCurrentBatch(currentVarsBatch);
-                System.out.println("== NEW BATCH !!! ====> " + i);
+                addBatchToQueue(currentVarsBatch);
+                LOG.info("[ New batch:  " + i + " ]");
                 currentVarsBatch = new ArrayList<>();
             }
         }
 
+        //Digest the remaining Vars in the batch.
+
         if (currentVarsBatch.size() > 0) {
-            loadCurrentBatch(currentVarsBatch);
-            System.out.println("== NEW BATCH !!! ====> " + i);
+            addBatchToQueue(currentVarsBatch);
+            LOG.info("[ New batch:  " + i + " ]");
         }
 
         bufferedReader.close();
     }
 
-    private void loadCurrentBatch(List<Var> currentVarsBatch) {
+    private void addBatchToQueue(List<Var> currentVarsBatch) {
+
         final List<Var> finalCurrentVarsBatch = new ArrayList<>(currentVarsBatch);
         loader.addJob(finalCurrentVarsBatch);
 
@@ -158,7 +169,7 @@ public class ImportFromFile {
                 return true;
             }
         } catch (Exception e) {
-            System.out.println("Exception caused by " + command);
+            LOG.error("Exception caused by " + command);
             e.printStackTrace();
         }
         return false;
@@ -184,26 +195,26 @@ public class ImportFromFile {
             }
             return ready;
         } catch (Exception e) {
-            System.out.println("Exception caused by " + command);
+            LOG.error("Exception caused by " + command);
             e.printStackTrace();
             return false;
         }
 
     }
 
-    public void loadOntology(String ontologyFile) {
+    public void loadOntologyFromFile(String ontologyFile) {
 
         MindmapsTransactionImpl transaction = (MindmapsTransactionImpl)graph.newTransaction();
 
         try {
-            System.out.println("============  LOADING ONTOLOGY ==============");
+            LOG.info("============  LOADING ONTOLOGY ==============");
 
             List<String> lines = Files.readAllLines(Paths.get(ontologyFile), StandardCharsets.UTF_8);
             String query = lines.stream().reduce("", (s1, s2) -> s1 + "\n" + s2);
             QueryParser.create(transaction).parseInsertQuery(query).execute();
             transaction.commit();
 
-            System.out.println("=============  ONTOLOGY LOADED ==============");
+            LOG.info("=============  ONTOLOGY LOADED ==============");
         } catch (Exception e) {
             e.printStackTrace();
         }

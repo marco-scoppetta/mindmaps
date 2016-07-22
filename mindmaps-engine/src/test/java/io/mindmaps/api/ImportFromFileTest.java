@@ -2,7 +2,6 @@ package io.mindmaps.api;
 
 import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.factory.GraphFactory;
-import io.mindmaps.factory.MindmapsTestGraphFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,11 +20,11 @@ public class ImportFromFileTest {
 
     @Test
     public void testLoadOntologyAndData() {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource("ldbc-snb-ontology.gql").getFile());
-        importer.loadOntology(file.getAbsolutePath());
-        file= new File(classLoader.getResource("ldbc-snb-data.gql").getFile());
-        importer.importGraph(file.getAbsolutePath());
+//        ClassLoader classLoader = getClass().getClassLoader();
+//        File file = new File(classLoader.getResource("ldbc-snb-ontology.gql").getFile());
+//        importer.loadOntologyFromFile(file.getAbsolutePath());
+//        file= new File(classLoader.getResource("ldbc-snb-data.gql").getFile());
+//        importer.importDataFromFile(file.getAbsolutePath());
     }
 
 }
