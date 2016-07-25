@@ -1,6 +1,5 @@
 package io.mindmaps.core;
 
-import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.loader.QueueManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,31 +10,31 @@ import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class BackgroundTasks {
+public class BackgroundTasksManager {
     private static final long TIME_LAPSE = 60000;
 
     private final AtomicBoolean canRun = new AtomicBoolean(true);
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
-    private final Logger LOG = LoggerFactory.getLogger(BackgroundTasks.class);
+    private final Logger LOG = LoggerFactory.getLogger(BackgroundTasksManager.class);
     private ExecutorService postpool;
     private ExecutorService statDump;
     private Set<Future> futures;
     private ConceptFixer conceptFixer;
     private String currentStage;
 
-    private static BackgroundTasks instance = null;
+    private static BackgroundTasksManager instance = null;
 
     private Cache cache;
 
     private int NUM_THREADS = 20; // read from config file
 
-    public static synchronized BackgroundTasks getInstance() {
+    public static synchronized BackgroundTasksManager getInstance() {
         if (instance == null)
-            instance = new BackgroundTasks();
+            instance = new BackgroundTasksManager();
         return instance;
     }
 
-    private BackgroundTasks() {
+    private BackgroundTasksManager() {
         conceptFixer = new ConceptFixer(cache);
         postpool = Executors.newFixedThreadPool(NUM_THREADS);
         statDump = Executors.newSingleThreadExecutor();

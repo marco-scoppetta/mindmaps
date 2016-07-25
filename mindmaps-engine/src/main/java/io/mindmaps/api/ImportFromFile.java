@@ -70,9 +70,17 @@ public class ImportFromFile {
         sleepTime = Integer.parseInt(prop.getProperty(SLEEP_TIME_PROPERTY));
 
 
-        post("/importFile/", (req, res) -> {
+        post("/importDataFromFile/", (req, res) -> {
             JSONObject bodyObject = new JSONObject(req.body());
+            System.out.println("PATHHH data" + bodyObject.get("path"));
             importDataFromFile(bodyObject.get("path").toString());
+            return "ok";
+        });
+
+        post("/importOntologyFromFile/", (req, res) -> {
+            JSONObject bodyObject = new JSONObject(req.body());
+            System.out.println("PATHHH ontology" + bodyObject.get("path"));
+            loadOntologyFromFile(bodyObject.get("path").toString());
             return "ok";
         });
 

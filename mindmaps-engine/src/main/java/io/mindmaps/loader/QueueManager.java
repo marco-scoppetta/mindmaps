@@ -1,6 +1,6 @@
 package io.mindmaps.loader;
 
-import io.mindmaps.core.BackgroundTasks;
+import io.mindmaps.core.BackgroundTasksManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -175,8 +175,8 @@ public class QueueManager {
         // Change state based on errors
         currentJobs.decrementAndGet();
 
-        synchronized (BackgroundTasks.getInstance()) {
-            BackgroundTasks.getInstance().notify();
+        synchronized (BackgroundTasksManager.getInstance()) {
+            BackgroundTasksManager.getInstance().notify();
         }
 
         lastJobFinished.set(System.currentTimeMillis());
@@ -196,7 +196,7 @@ public class QueueManager {
         long jobs = finishedJobs.incrementAndGet();
         printStatus();
         if (jobs % MAINTENANCE_ITERATION == 0) {
-            BackgroundTasks.getInstance().forcePostprocessing();
+            BackgroundTasksManager.getInstance().forcePostprocessing();
         }
     }
 
