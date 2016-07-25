@@ -66,9 +66,9 @@ public class Loader {
     }
 
     private class loadableVars implements LoadableBatch {
-        private List<Var> batchToLoad;
+        private Collection<Var> batchToLoad;
 
-        public loadableVars(List<Var> batch) {
+        public loadableVars(Collection<Var> batch) {
             batchToLoad = batch;
         }
 
@@ -83,7 +83,7 @@ public class Loader {
         return queueManager.addJob(() -> loadData(new loadableString(queryString)));
     }
 
-    public UUID addJob(List<Var> batchToLoad) {
+    public UUID addJob(Collection<Var> batchToLoad) {
         return queueManager.addJob(() -> loadData(new loadableVars(batchToLoad)));
     }
 

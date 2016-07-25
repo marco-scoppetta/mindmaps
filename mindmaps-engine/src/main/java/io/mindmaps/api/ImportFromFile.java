@@ -38,7 +38,7 @@ public class ImportFromFile {
 
 
     private final int batchSize = 60;
-    private final int sleepTime = 100;
+    private final int sleepTime = 200;
 
     Map<String, String> entitiesMap;
     ArrayList<Var> relationshipsList;
@@ -62,10 +62,17 @@ public class ImportFromFile {
         loader = new Loader(initGraph);
         queueManager = QueueManager.getInstance();
 
-        post("/importFile/", (req, res) -> {
+        post("/importDataFromFile/", (req, res) -> {
             JSONObject bodyObject = new JSONObject(req.body());
-            System.out.println("PATHHH " + bodyObject.get("path"));
+            System.out.println("PATHHH data" + bodyObject.get("path"));
             importGraph(bodyObject.get("path").toString());
+            return "ok";
+        });
+
+        post("/importOntologyFromFile/", (req, res) -> {
+            JSONObject bodyObject = new JSONObject(req.body());
+            System.out.println("PATHHH ontology" + bodyObject.get("path"));
+            loadOntology(bodyObject.get("path").toString());
             return "ok";
         });
 

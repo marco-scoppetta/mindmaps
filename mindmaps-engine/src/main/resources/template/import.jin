@@ -65,14 +65,26 @@
     </div>
     <div class="row">
         <div class="col-md-3"></div>
-        <div class="col-md-6 text-center"><h1>IMPORT FROM GRAQL FILE</h1></div>
+        <div class="col-md-6 text-center"><h3>Import ontology from Graql file</h3></div>
         <div class="col-md-3"></div>
     </div>
     <div class="row" style="margin-top:30px;">
-        <div class="col-md-3 text-right">ENTER FILE PATH:</div>
-        <div class="col-md-6"><input type="text" name="file_path" id="importFilePath" value=""></div>
+        <div class="col-md-3 text-right">Enter file path for ONTOLOGY:</div>
+        <div class="col-md-6"><input type="text" name="file_path" id="importOntologyFilePath" value=""></div>
         <div class="col-md-3">
-            <button type="button" class="btn btn-success" id="loadfile">Load</button>
+            <button type="button" class="btn btn-success" id="loadOntologyfile">Load</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6 text-center"><h3>Import data from Graql file</h3></div>
+        <div class="col-md-3"></div>
+    </div>
+    <div class="row" style="margin-top:30px;">
+        <div class="col-md-3 text-right">Enter file path for DATA:</div>
+        <div class="col-md-6"><input type="text" name="file_path" id="importDataFilePath" value=""></div>
+        <div class="col-md-3">
+            <button type="button" class="btn btn-success" id="loadDatafile">Load</button>
         </div>
     </div>
 

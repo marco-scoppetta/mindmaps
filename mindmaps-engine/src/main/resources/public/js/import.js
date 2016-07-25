@@ -6,13 +6,22 @@ function post(url, json ,callback) {
 
 $(function() {
 
-    $( "#loadfile" ).click(function(){
-        console.log("FILE PATH "+$("#importFilePath").val());
+    $( "#loadDataFile" ).click(function(){
+        console.log("FILE PATH "+$("#importDataFilePath").val());
 
-        post("http://"+$(location).attr('host')+"/importFile/","{\"path\":\""+$("#importFilePath").val()+"\"}",
+        post("http://"+$(location).attr('host')+"/importDataFromFile/","{\"path\":\""+$("#importDataFilePath").val()+"\"}",
             function(){
             console.log("response "+data);
         });
+    });
+
+    $( "#loadOntologyfile" ).click(function(){
+        console.log("FILE PATH "+$("#importOntologyFilePath").val());
+
+        post("http://"+$(location).attr('host')+"/importOntologyFromFile/","{\"path\":\""+$("#importOntologyFilePath").val()+"\"}",
+            function(){
+                console.log("response "+data);
+            });
     });
 });
 
