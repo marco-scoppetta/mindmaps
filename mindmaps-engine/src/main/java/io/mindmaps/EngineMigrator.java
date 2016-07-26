@@ -6,7 +6,6 @@ import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.query.Var;
 import io.mindmaps.loader.Loader;
-import io.mindmaps.loader.QueueManager;
 import io.mindmaps.migration.TransactionManager;
 import io.mindmaps.migration.sql.SqlDataMigrator;
 import io.mindmaps.migration.sql.SqlSchemaMigrator;
@@ -51,7 +50,7 @@ public class EngineMigrator {
 //            currentBatch.addAll(datamigrator.next());
 //            if (i % 10 == 0) {
 //                System.out.println("== NEW BATCH !!! ====> " + i);
-                manager.insert(datamigrator.next());
+            manager.insert(datamigrator.next());
 //                currentBatch = new ArrayList<>();
 //                try {
 //                    Thread.sleep(100);
