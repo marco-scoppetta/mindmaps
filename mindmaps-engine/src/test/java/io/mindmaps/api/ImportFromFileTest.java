@@ -1,7 +1,7 @@
 package io.mindmaps.api;
 
 import io.mindmaps.core.dao.MindmapsGraph;
-import io.mindmaps.factoryengine.GraphFactory;
+import io.mindmaps.factory.GraphFactory;
 import org.junit.Before;
 import org.junit.Test;
 

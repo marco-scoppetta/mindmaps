@@ -2,7 +2,7 @@ package io.mindmaps.api;
 
 import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
-import io.mindmaps.factoryengine.GraphFactory;
+import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.parser.QueryParser;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -30,7 +30,7 @@ public class RestGETController {
             responseObj.put("roles",new JSONArray(transaction.getMetaRoleType().instances().stream().map(x -> x.getId()).toArray()));
             responseObj.put("entities", new JSONArray(transaction.getMetaEntityType().instances().stream().map(x -> x.getId()).toArray()));
             responseObj.put("relations", new JSONArray(transaction.getMetaRelationType().instances().stream().map(x -> x.getId()).toArray()));
-            responseObj.put("resources", new JSONArray(transaction.getMetaResourceType().instances().stream().map(x->x.getId()).toArray()));
+            responseObj.put("resources", new JSONArray(transaction.getMetaResourceType().instances().stream().map(x -> x.getId()).toArray()));
 
             return responseObj.toString();
         });

@@ -1,7 +1,6 @@
-package io.mindmaps.factoryengine;
+package io.mindmaps.factory;
 
 import io.mindmaps.core.dao.MindmapsGraph;
-import io.mindmaps.factory.MindmapsGraphFactory;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 
 import java.io.IOException;
@@ -62,7 +61,7 @@ public class GraphFactory {
 
     private synchronized MindmapsGraph buildGraph(String name, String config) {
 
-        MindmapsGraph mindmapsGraph = titanGraphFactory.getGraph("ciao","localhost","bullshit"); //.getGraph(name, "localhost", config);
+        MindmapsGraph mindmapsGraph = titanGraphFactory.getGraph(name, "localhost", config);
 
         Graph graph = mindmapsGraph.getGraph();
 //        Graph graph = mindmapsGraph.getTinkerPopGraph(); why is this?

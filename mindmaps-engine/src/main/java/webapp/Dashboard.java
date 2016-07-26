@@ -1,6 +1,6 @@
 package webapp;
 
-import io.mindmaps.factoryengine.GraphFactory;
+import io.mindmaps.factory.GraphFactory;
 import spark.ModelAndView;
 
 import java.util.HashMap;
