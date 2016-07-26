@@ -24,12 +24,12 @@ public class MindmapsEngineServer {
         //  threadPool(maxThreads);
 
         // Listening port
-        // port(9090);
+        //port(9090);
 
         // --------------------------------- //
 
         Logger logger = (Logger) org.slf4j.LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        logger.setLevel(Level.ERROR);
+        logger.setLevel(Level.INFO);
 
 
         // ----- APIs --------- //

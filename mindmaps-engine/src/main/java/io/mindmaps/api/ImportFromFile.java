@@ -7,8 +7,7 @@ import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.parser.QueryParser;
 import io.mindmaps.graql.api.query.Var;
-import io.mindmaps.loader.Loader;
-import io.mindmaps.loader.QueueManager;
+import io.mindmaps.loader.BlockingLoader;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +37,7 @@ public class ImportFromFile {
     Map<String, String> entitiesMap;
     ArrayList<Var> relationshipsList;
 
-    private Loader loader;
-    private QueueManager queueManager;
+    private BlockingLoader loader;
     private MindmapsGraph graph;
 
 
@@ -49,10 +47,9 @@ public class ImportFromFile {
 
     public ImportFromFile(MindmapsGraph initGraph) {
 
-
         //change this
-        Logger logger = (Logger) org.slf4j.LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        logger.setLevel(Level.INFO);
+//        Logger logger = (Logger) org.slf4j.LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+//        logger.setLevel(Level.ERROR);
 
         Properties prop = new Properties();
         try {
@@ -64,8 +61,7 @@ public class ImportFromFile {
         graph = initGraph;
         entitiesMap = new ConcurrentHashMap<>();
         relationshipsList = new ArrayList<>();
-        loader = new Loader(initGraph);
-        queueManager = QueueManager.getInstance();
+        loader = new BlockingLoader(initGraph);
         batchSize = Integer.parseInt(prop.getProperty(BATCH_SIZE_PROPERTY));
         sleepTime = Integer.parseInt(prop.getProperty(SLEEP_TIME_PROPERTY));
 
@@ -94,6 +90,7 @@ public class ImportFromFile {
         try {
             scanFile(parseEntity, dataFile);
             scanFile(parseRelation, dataFile);
+            loader.waitToFinish();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -114,24 +111,13 @@ public class ImportFromFile {
         while ((line = bufferedReader.readLine()) != null) {
             if (line.startsWith("insert")) line = line.substring(6);
 
-            //Backoff for 10 seconds if the queueManager cannot load fast enough.
-            //Try to implement something more dynamic. (e.g. Congestion avoidance algorithm)
-
-            while (queueManager.getTotalJobs() - queueManager.getFinishedJobs() - queueManager.getErrorJobs() > 100) {
-                try {
-                    Thread.sleep(10000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
             //Skip empty lines && comments
             if (line.length() > 0 && !line.startsWith("#") && parser.test(line, currentVarsBatch))
                 i++;
 
             if (i % batchSize == 0 && latestBatchNumber != i) {
                 latestBatchNumber = i;
-                addBatchToQueue(currentVarsBatch);
+                loader.addToQueue(currentVarsBatch);
                 LOG.info("[ New batch:  " + i + " ]");
                 currentVarsBatch = new ArrayList<>();
             }
@@ -140,23 +126,11 @@ public class ImportFromFile {
         //Digest the remaining Vars in the batch.
 
         if (currentVarsBatch.size() > 0) {
-            addBatchToQueue(currentVarsBatch);
+            loader.addToQueue(currentVarsBatch);
             LOG.info("[ New batch:  " + i + " ]");
         }
 
         bufferedReader.close();
-    }
-
-    private void addBatchToQueue(List<Var> currentVarsBatch) {
-
-        final List<Var> finalCurrentVarsBatch = new ArrayList<>(currentVarsBatch);
-        loader.addJob(finalCurrentVarsBatch);
-
-        try {
-            Thread.sleep(sleepTime);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     private boolean parseEntity(String command, List<Var> currentVarsBatch) {

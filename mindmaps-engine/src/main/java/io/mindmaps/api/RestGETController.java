@@ -41,7 +41,7 @@ public class RestGETController {
 
     private String matchQuery(Request req, Response res) {
         QueryParser parser = QueryParser.create(graph.newTransaction());
-        System.out.println("RECEIVED SELECT QUERY " + req.queryParams("query"));
+        System.out.println("RECEIVED MATCH QUERY " + req.queryParams("query"));
 
         try {
             return parser.parseMatchQuery(req.queryParams("query"))
