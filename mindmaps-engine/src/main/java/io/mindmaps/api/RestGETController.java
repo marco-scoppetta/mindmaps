@@ -1,16 +1,14 @@
 package io.mindmaps.api;
 
 import io.mindmaps.core.dao.MindmapsGraph;
-import io.mindmaps.core.dao.MindmapsTransaction;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
-import io.mindmaps.factory.GraphFactory;
+import io.mindmaps.factoryengine.GraphFactory;
 import io.mindmaps.graql.api.parser.QueryParser;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
 
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import static spark.Spark.get;

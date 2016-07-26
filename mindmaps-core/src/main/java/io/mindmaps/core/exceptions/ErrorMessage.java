@@ -36,15 +36,14 @@ public enum ErrorMessage {
     VALIDATION_ROLE_TYPE("RoleType ['%s'] does not have exactly one has-role connection to any RelationType. \n"),
     VALIDATION_RELATION_TYPE("Relation Type ['%s'] does not have two or more roles \n"),
 
+    //--------------------------------------------- Factory Errors -----------------------------------------------
+    INVALID_PATH_TO_CONFIG("Unable to open config file ['%s']"),
+
     //--------------------------------------------- Client Errors -----------------------------------------------
     INVALID_ENGINE_RESPONSE("Mindmaps Engine located at ['%s'] returned response ['%s'], cannot produce a graph."),
     INVALID_FACTORY("Graph Factory ['%s'] is not valid"),
     MISSING_FACTORY_DEFINITION("Graph Factor Config ['factory.internal'] missing from provided config. Cannot produce graph"),
     CONFIG_NOT_FOUND("Mindmaps Engine located at ['%s'] did not return the config as expected, due to ['%s']");
-
-
-
-
 
     private final String message;
 

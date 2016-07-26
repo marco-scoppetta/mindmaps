@@ -1,7 +1,9 @@
 package io.mindmaps.core.implementation;
 
 import io.mindmaps.core.exceptions.MoreThanOneEdgeException;
-import io.mindmaps.core.model.*;
+import io.mindmaps.core.model.Concept;
+import io.mindmaps.core.model.RelationType;
+import io.mindmaps.core.model.RoleType;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 
 import java.util.Collection;
@@ -91,6 +93,8 @@ class ValidateGlobalRules {
 
         return true;
     }
+
+
 
     /*--------------------------------------- Global Related TO Local Rules ------------------------------------------*/
     public static boolean validateIsAbstractHasNoIncomingIsaEdges(TypeImpl conceptType){

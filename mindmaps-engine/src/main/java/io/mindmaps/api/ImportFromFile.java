@@ -1,10 +1,8 @@
 package io.mindmaps.api;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
-import io.mindmaps.factory.GraphFactory;
+import io.mindmaps.factoryengine.GraphFactory;
 import io.mindmaps.graql.api.parser.QueryParser;
 import io.mindmaps.graql.api.query.Var;
 import io.mindmaps.loader.BlockingLoader;
@@ -41,7 +39,7 @@ public class ImportFromFile {
     private MindmapsGraph graph;
 
 
-    public ImportFromFile(){
+    public ImportFromFile() {
         new ImportFromFile(GraphFactory.getInstance().buildMindmapsGraphBatchLoading());
     }
 
@@ -186,7 +184,7 @@ public class ImportFromFile {
 
     public void loadOntologyFromFile(String ontologyFile) {
 
-        MindmapsTransactionImpl transaction = (MindmapsTransactionImpl)graph.newTransaction();
+        MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) graph.newTransaction();
 
         try {
             LOG.info("============  LOADING ONTOLOGY ==============");

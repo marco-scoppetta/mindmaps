@@ -2,7 +2,7 @@ package io.mindmaps.api;
 
 import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.core.dao.MindmapsTransaction;
-import io.mindmaps.factory.GraphFactory;
+import io.mindmaps.factoryengine.GraphFactory;
 import io.mindmaps.visualiser.HALConcept;
 import spark.Request;
 import spark.Response;

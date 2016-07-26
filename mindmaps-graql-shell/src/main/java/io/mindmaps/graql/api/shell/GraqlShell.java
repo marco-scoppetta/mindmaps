@@ -12,10 +12,11 @@ import io.mindmaps.graql.api.parser.QueryParser;
 import io.mindmaps.graql.api.query.AskQuery;
 import io.mindmaps.graql.api.query.DeleteQuery;
 import io.mindmaps.graql.api.query.InsertQuery;
-import io.mindmaps.graql.api.query.QueryBuilder;
 import io.mindmaps.graql.internal.parser.ANSI;
 import io.mindmaps.graql.internal.parser.MatchQueryPrinter;
-import io.mindmaps.graql.internal.shell.*;
+import io.mindmaps.graql.internal.shell.ErrorMessage;
+import io.mindmaps.graql.internal.shell.GraQLCompleter;
+import io.mindmaps.graql.internal.shell.ShellCommandCompleter;
 import jline.console.ConsoleReader;
 import jline.console.completer.AggregateCompleter;
 import jline.console.history.FileHistory;
@@ -71,7 +72,7 @@ public class GraqlShell implements AutoCloseable {
      */
     public static void main(String[] args) {
         String version = GraqlShell.class.getPackage().getImplementationVersion();
-        runShell(args, MindmapsClient::newGraph, version, System.in, System.out, System.err);
+        runShell(args, MindmapsClient::getGraph, version, System.in, System.out, System.err);
     }
 
     static void runShell(String[] args, Function<String, MindmapsGraph> factory, String version, InputStream in, PrintStream out, PrintStream err) {
@@ -182,10 +183,7 @@ public class GraqlShell implements AutoCloseable {
         console.setHistory(history);
 
         // Add all autocompleters
-        console.addCompleter(new AggregateCompleter(
-                new KeywordCompleter(), new VariableCompleter(), new TypeCompleter(QueryBuilder.build(transaction)),
-                new ShellCommandCompleter()
-        ));
+        console.addCompleter(new AggregateCompleter(new GraQLCompleter(graph), new ShellCommandCompleter()));
 
         String queryString;
 

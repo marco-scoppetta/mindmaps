@@ -4,7 +4,7 @@ import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.core.model.Concept;
 import io.mindmaps.core.model.Relation;
-import io.mindmaps.factory.GraphFactory;
+import io.mindmaps.factoryengine.GraphFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

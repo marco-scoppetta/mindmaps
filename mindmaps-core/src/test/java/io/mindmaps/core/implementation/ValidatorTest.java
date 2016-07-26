@@ -272,4 +272,32 @@ public class ValidatorTest {
         mindmapsGraph.putEntity("ent1", ent_t);
         mindmapsGraph.commit();
     }
+
+    @Test
+    public void testRoleTypeCanPlayRoleIfAbstract() throws MindmapsValidationException {
+        RoleType role1 = mindmapsGraph.putRoleType("role1").setAbstract(true);
+        RoleType role2 = mindmapsGraph.putRoleType("role2").setAbstract(true);
+        EntityType entityType = mindmapsGraph.putEntityType("my type").playsRole(role1).playsRole(role2);
+        mindmapsGraph.commit();
+    }
+
+    @Test
+    public void testNormalRelationshipWithTwoPlaysRole() throws MindmapsValidationException {
+        RoleType characterBeingPlayed = mindmapsGraph.putRoleType("Character being played");
+        RoleType personPlayingCharacter = mindmapsGraph.putRoleType("Person Playing Char");
+        RelationType playsChar = mindmapsGraph.putRelationType("Plays Char").hasRole(characterBeingPlayed).hasRole(personPlayingCharacter);
+
+        EntityType person = mindmapsGraph.putEntityType("person").playsRole(characterBeingPlayed).playsRole(personPlayingCharacter);
+        EntityType character = mindmapsGraph.putEntityType("character").playsRole(characterBeingPlayed);
+
+        Entity matt = mindmapsGraph.putEntity("Matt", person);
+        Entity walker = mindmapsGraph.putEntity("Walker", character);
+
+        mindmapsGraph.addRelation(playsChar).
+                putRolePlayer(personPlayingCharacter, matt).
+                putRolePlayer(characterBeingPlayed, walker);
+
+        mindmapsGraph.commit();
+    }
+
 }

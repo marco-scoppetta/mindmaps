@@ -1,13 +1,9 @@
 package io.mindmaps.api;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 import io.mindmaps.core.dao.MindmapsGraph;
-import io.mindmaps.factory.GraphFactory;
+import io.mindmaps.factoryengine.GraphFactory;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
 
 public class ImportFromFileTest {
 
