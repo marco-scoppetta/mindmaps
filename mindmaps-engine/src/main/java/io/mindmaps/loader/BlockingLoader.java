@@ -2,6 +2,7 @@ package io.mindmaps.loader;
 
 import io.mindmaps.core.Cache;
 import io.mindmaps.core.dao.MindmapsGraph;
+import io.mindmaps.core.dao.MindmapsTransaction;
 import io.mindmaps.core.exceptions.MindmapsValidationException;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
@@ -24,14 +25,14 @@ public class BlockingLoader {
     private final Logger LOG = LoggerFactory.getLogger(BlockingLoader.class);
 
 
-    private static final int NUMBER_THREADS = 8;
+    private static final int NUMBER_THREADS = 16;
     private ExecutorService executor;
     private MindmapsGraph graph;
     private Cache cache;
     private ExecutorService flushToCache;
     private Collection<Var> currentBatch;
-    private int batchSize = 1;
-    private static Semaphore limitSem = new Semaphore(NUMBER_THREADS + 10);
+    private int batchSize = 60;
+    private static Semaphore limitSem = new Semaphore(NUMBER_THREADS*2);
     private static final int REPEAT_COMMITS = 5;
 
 
@@ -45,6 +46,8 @@ public class BlockingLoader {
         graph = initGraph;
         executor = Executors.newFixedThreadPool(NUMBER_THREADS);
         currentBatch = new ArrayList<>();
+
+        System.out.println("===============  SEMAPHORE SIZE: "+limitSem.availablePermits());
     }
 
     public void addToQueue(Collection<Var> vars) {
@@ -89,7 +92,7 @@ public class BlockingLoader {
         // Attempt committing the transaction a certain number of times
         // If a transaction fails, it must be repeated from scratch because Titan is forgetful
         for (int i = 0; i < REPEAT_COMMITS; i++) {
-            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) graph.newTransaction();
+            MindmapsTransaction transaction = graph.newTransaction();
             try {
 
                 QueryBuilder.build(transaction).insert(batch).execute();

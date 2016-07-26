@@ -1,6 +1,7 @@
 package io.mindmaps.factory;
 
 import io.mindmaps.core.dao.MindmapsGraph;
+import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 
 import java.io.IOException;
@@ -51,7 +52,8 @@ public class GraphFactory {
 
     public MindmapsGraph buildMindmapsGraphBatchLoading() {
         MindmapsGraph graph = buildGraph(DEFAULT_NAME,graphConfig);
-        graph.newTransaction().enableBatchLoading();
+        //graph.getGraph().configuration(). why dont we enable the batchloading by setting the configuration like we do for block-size?
+        graph.newTransaction().enableBatchLoading();  //why this? is this useless if we than close the tx?
         return graph;
     }
 
@@ -62,6 +64,8 @@ public class GraphFactory {
     private synchronized MindmapsGraph buildGraph(String name, String config) {
 
         MindmapsGraph mindmapsGraph = titanGraphFactory.getGraph(name, "localhost", config);
+
+     //   MindmapsTransactionImpl tx = (MindmapsTransactionImpl)mindmapsGraph.newTransaction();
 
         Graph graph = mindmapsGraph.getGraph();
 //        Graph graph = mindmapsGraph.getTinkerPopGraph(); why is this?
