@@ -18,7 +18,7 @@ class ConceptFixer {
 
     public ConceptFixer(Cache c){
         cache = c;
-        graph = GraphFactory.getInstance().buildMindmapsGraph();
+        graph = GraphFactory.getInstance().getGraph("mindmaps");
     }
 
     public String createAssertionHashCode(String assertionId) {

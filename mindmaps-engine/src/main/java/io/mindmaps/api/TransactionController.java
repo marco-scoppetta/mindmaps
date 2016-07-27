@@ -15,7 +15,9 @@ public class TransactionController {
         loader = new Loader();
 
         post("/transaction", (request, response) -> {
-            UUID uuid = loader.addJob(request.body());
+            //read graphName from http
+            String graphName = "mindmaps";
+            UUID uuid = loader.addJob(graphName,request.body());
             if (uuid != null) {
                 response.status(201);
                 return uuid.toString();

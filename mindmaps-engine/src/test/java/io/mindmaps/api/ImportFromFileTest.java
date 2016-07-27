@@ -12,8 +12,7 @@ public class ImportFromFileTest {
     @Before
     public void setUp() throws Exception {
      //   MindmapsGraph graph = MindmapsTestGraphFactory.newEmptyGraph();
-        MindmapsGraph graph = GraphFactory.getInstance().buildMindmapsGraphBatchLoading();
-        importer = new ImportFromFile(graph);
+        importer = new ImportFromFile();
     }
 
     @Test

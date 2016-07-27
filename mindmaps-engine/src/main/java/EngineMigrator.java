@@ -2,13 +2,9 @@ package io.mindmaps;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import io.mindmaps.core.dao.MindmapsGraph;
-import io.mindmaps.core.dao.MindmapsTransaction;
-import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.query.Var;
 import io.mindmaps.loader.BlockingLoader;
-import io.mindmaps.loader.Loader;
 import io.mindmaps.migration.TransactionManager;
 import io.mindmaps.migration.sql.SqlDataMigrator;
 import io.mindmaps.migration.sql.SqlSchemaMigrator;
@@ -25,13 +21,12 @@ public class EngineMigrator {
 
     public static void main(String[] args) throws SQLException {
         disableInternalLogs();
-        MindmapsGraph graph = GraphFactory.getInstance().buildMindmapsGraphBatchLoading();
 //        MindmapsTransaction tx = graph.newTransaction();
 //        tx.enableBatchLoading();
 //        System.out.println(" EHIIII BATCH LOADING ENABLED: " + tx.isBatchLoadingEnabled());
 //        manager = new TransactionManager(graph);
 
-        BlockingLoader loader = new BlockingLoader(graph);
+        BlockingLoader loader = new BlockingLoader();
         Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost/occrp_datavault", "postgres", "postgres");
 
         SqlSchemaMigrator schemamigrator = new SqlSchemaMigrator(connection);
@@ -41,7 +36,7 @@ public class EngineMigrator {
         Collection<Var> currentBatch = new ArrayList<>();
 
 
-        TransactionManager manager = new TransactionManager(graph);
+        TransactionManager manager = new TransactionManager(GraphFactory.getInstance().getGraph("mindmaps"));
         manager.setBatchSize(200);
         while (schemamigrator.hasNext()) {
             manager.insert(schemamigrator.next());
@@ -52,9 +47,9 @@ public class EngineMigrator {
         long start = System.currentTimeMillis();
         while (datamigrator.hasNext()) {
             i++;
-            loader.addToQueue(datamigrator.next());
+            loader.addToQueue("mindmaps", datamigrator.next());
 //            currentBatch.addAll(datamigrator.next());
-           if (i % 20 == 0) {
+            if (i % 20 == 0) {
                 System.out.println("== NEW BATCH !!! ====> " + i);
 //            manager.insert(datamigrator.next());
 //                currentBatch = new ArrayList<>();

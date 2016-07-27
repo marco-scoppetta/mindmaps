@@ -1,7 +1,6 @@
 package io.mindmaps.loader;
 
 import io.mindmaps.core.Cache;
-import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.core.exceptions.MindmapsValidationException;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
@@ -28,7 +27,6 @@ public class Loader {
     private ExecutorService flushToCache;
     private static final int REPEAT_COMMITS = 5;
     private static Loader instance = null;
-    private MindmapsGraph graph;
 
 //    public static synchronized Loader getInstance() {
 //        if (instance == null) instance = new Loader();
@@ -36,15 +34,10 @@ public class Loader {
 //    }
 
 
-    public Loader(){
-        new Loader(GraphFactory.getInstance().buildMindmapsGraphBatchLoading());
-    }
-
-    public Loader(MindmapsGraph initGraph) {
+    public Loader() {
         flushToCache = Executors.newFixedThreadPool(10);
         queueManager = QueueManager.getInstance();
         cache = Cache.getInstance();
-        graph = initGraph;
     }
 
     private interface LoadableBatch {
@@ -78,21 +71,22 @@ public class Loader {
     }
 
 
-    public UUID addJob(String queryString) {
-        return queueManager.addJob(() -> loadData(new loadableString(queryString)));
+    public UUID addJob(String name, String queryString) {
+        return queueManager.addJob(() -> loadData(name, new loadableString(queryString)));
     }
 
-    public UUID addJob(List<Var> batchToLoad) {
-        return queueManager.addJob(() -> loadData(new loadableVars(batchToLoad)));
+    public UUID addJob(String name, List<Var> batchToLoad) {
+        return queueManager.addJob(() -> loadData(name, new loadableVars(batchToLoad)));
     }
 
-    private List<String> loadData(LoadableBatch batch) {
+    private List<String> loadData(String name, LoadableBatch batch) {
         List<String> errors = new ArrayList<>();
 
         // Attempt committing the transaction a certain number of times
         // If a transaction fails, it must be repeated from scratch because Titan is forgetful
         for (int i = 0; i < REPEAT_COMMITS; i++) {
-            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl)graph.newTransaction();
+            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraph(name).newTransaction();
+            transaction.enableBatchLoading(); // eventually this will go away
             try {
 
                 batch.load(transaction);

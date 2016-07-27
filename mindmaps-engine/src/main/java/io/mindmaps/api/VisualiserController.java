@@ -15,8 +15,6 @@ public class VisualiserController {
 
     public VisualiserController() {
 
-        graph = GraphFactory.getInstance().buildMindmapsGraph();
-
         get("/concepts", this::getConceptsByValue);
 
         get("/concept/:id", this::getConceptById);
@@ -27,13 +25,17 @@ public class VisualiserController {
 
         // Finish this.
 
-        graph.newTransaction().getConceptsByValue(req.queryParams("value"));
+        //read graph name from http header
+        String graphName  = "mindmaps";
+        GraphFactory.getInstance().getGraph(graphName).newTransaction().getConceptsByValue(req.queryParams("value"));
         return req.queryParams("value");
     }
 
     private String getConceptById(Request req, Response res) {
 
-        MindmapsTransaction transaction = graph.newTransaction();
+        //read graph name from http header
+        String graphName  = "mindmaps";
+        MindmapsTransaction transaction = GraphFactory.getInstance().getGraph(graphName).newTransaction();
 
         try {
             return new HALConcept(transaction.getConcept(req.params(":id"))).render();

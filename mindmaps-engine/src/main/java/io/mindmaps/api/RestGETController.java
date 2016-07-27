@@ -17,8 +17,10 @@ public class RestGETController {
 
     MindmapsGraph graph;
 
+    //READ GRAPH NAME FROM HEADER OF HTTP REQUEST!!!!!
+    String graphName = "mindmaps";
+
     public RestGETController() {
-        graph = GraphFactory.getInstance().buildMindmapsGraph();
 
         get("/hello", (req, res) -> "こんにちは from Mindmaps Engine!");
 
@@ -26,7 +28,7 @@ public class RestGETController {
 
         get("/metaTypeInstances",(req, res)->{
             JSONObject responseObj = new JSONObject();
-            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl)graph.newTransaction();
+            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraph(graphName).newTransaction();
             responseObj.put("roles",new JSONArray(transaction.getMetaRoleType().instances().stream().map(x -> x.getId()).toArray()));
             responseObj.put("entities", new JSONArray(transaction.getMetaEntityType().instances().stream().map(x -> x.getId()).toArray()));
             responseObj.put("relations", new JSONArray(transaction.getMetaRelationType().instances().stream().map(x -> x.getId()).toArray()));

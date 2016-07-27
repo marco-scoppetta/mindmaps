@@ -1,7 +1,6 @@
 package io.mindmaps.api;
 
-import io.mindmaps.core.dao.MindmapsGraph;
-import io.mindmaps.core.implementation.MindmapsTransactionImpl;
+import io.mindmaps.core.dao.MindmapsTransaction;
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.parser.QueryParser;
 import io.mindmaps.graql.api.query.Var;
@@ -27,27 +26,30 @@ public class ImportFromFile {
     private final org.slf4j.Logger LOG = LoggerFactory.getLogger(ImportFromFile.class);
     private final String BATCH_SIZE_PROPERTY = "importFromFile.batch-size";
     private final String SLEEP_TIME_PROPERTY = "importFromFile.sleep-time";
+    private final String GRAPH_NAME_PROPERTY = "graphdatabase.name";
 
 
     private int batchSize;
     private int sleepTime;
+    private String graphName;
 
     Map<String, String> entitiesMap;
     ArrayList<Var> relationshipsList;
 
     private BlockingLoader loader;
-    private MindmapsGraph graph;
 
 
     public ImportFromFile() {
-        new ImportFromFile(GraphFactory.getInstance().buildMindmapsGraphBatchLoading());
+        Properties prop = new Properties();
+        try {
+            prop.load(getClass().getClassLoader().getResourceAsStream("application.properties"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        new ImportFromFile(prop.getProperty(GRAPH_NAME_PROPERTY));
     }
 
-    public ImportFromFile(MindmapsGraph initGraph) {
-
-        //change this
-//        Logger logger = (Logger) org.slf4j.LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-//        logger.setLevel(Level.ERROR);
+    public ImportFromFile(String graphNameInit) {
 
         Properties prop = new Properties();
         try {
@@ -56,12 +58,12 @@ public class ImportFromFile {
             e.printStackTrace();
         }
 
-        graph = initGraph;
         entitiesMap = new ConcurrentHashMap<>();
         relationshipsList = new ArrayList<>();
-        loader = new BlockingLoader(initGraph);
+        loader = new BlockingLoader();
         batchSize = Integer.parseInt(prop.getProperty(BATCH_SIZE_PROPERTY));
         sleepTime = Integer.parseInt(prop.getProperty(SLEEP_TIME_PROPERTY));
+        graphName = graphNameInit;
 
 
         post("/importDataFromFile/", (req, res) -> {
@@ -88,7 +90,7 @@ public class ImportFromFile {
         try {
             scanFile(parseEntity, dataFile);
             scanFile(parseRelation, dataFile);
-            loader.waitToFinish();
+            //loader.waitToFinish(); TO DO: think a way of tracking jobs submitted to the executor relative to the current graph/client, using Futures?
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -115,7 +117,7 @@ public class ImportFromFile {
 
             if (i % batchSize == 0 && latestBatchNumber != i) {
                 latestBatchNumber = i;
-                loader.addToQueue(currentVarsBatch);
+                loader.addToQueue(graphName, currentVarsBatch);
                 LOG.info("[ New batch:  " + i + " ]");
                 currentVarsBatch = new ArrayList<>();
             }
@@ -124,7 +126,7 @@ public class ImportFromFile {
         //Digest the remaining Vars in the batch.
 
         if (currentVarsBatch.size() > 0) {
-            loader.addToQueue(currentVarsBatch);
+            loader.addToQueue(graphName, currentVarsBatch);
             LOG.info("[ New batch:  " + i + " ]");
         }
 
@@ -184,7 +186,7 @@ public class ImportFromFile {
 
     public void loadOntologyFromFile(String ontologyFile) {
 
-        MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) graph.newTransaction();
+        MindmapsTransaction transaction = GraphFactory.getInstance().getGraph(graphName).newTransaction();
 
         try {
             LOG.info("============  LOADING ONTOLOGY ==============");

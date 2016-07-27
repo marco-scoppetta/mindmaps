@@ -1,20 +1,15 @@
 package io.mindmaps.loader;
 
 import io.mindmaps.core.Cache;
-import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.core.dao.MindmapsTransaction;
 import io.mindmaps.core.exceptions.MindmapsValidationException;
-import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.query.QueryBuilder;
 import io.mindmaps.graql.api.query.Var;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -27,58 +22,58 @@ public class BlockingLoader {
 
     private static final int NUMBER_THREADS = 16;
     private ExecutorService executor;
-    private MindmapsGraph graph;
     private Cache cache;
     private ExecutorService flushToCache;
-    private Collection<Var> currentBatch;
-    private int batchSize = 60;
-    private static Semaphore limitSem = new Semaphore(NUMBER_THREADS*2);
+    private Map<String, Collection<Var>> batchesMap;
+    private int batchSize = 30;
+    private static Semaphore limitSem = new Semaphore(NUMBER_THREADS * 2);
     private static final int REPEAT_COMMITS = 5;
 
 
     public BlockingLoader() {
-        new BlockingLoader(GraphFactory.getInstance().buildMindmapsGraphBatchLoading());
-    }
 
-    public BlockingLoader(MindmapsGraph initGraph) {
         flushToCache = Executors.newFixedThreadPool(10);
         cache = Cache.getInstance();
-        graph = initGraph;
         executor = Executors.newFixedThreadPool(NUMBER_THREADS);
-        currentBatch = new ArrayList<>();
+        batchesMap = new HashMap<>();
 
-        System.out.println("===============  SEMAPHORE SIZE: "+limitSem.availablePermits());
+        LOG.info("===============  SEMAPHORE SIZE: " + limitSem.availablePermits());
     }
 
-    public void addToQueue(Collection<Var> vars) {
-        currentBatch.addAll(vars);
-        if (currentBatch.size() >= batchSize) {
-            submitToExecutor(currentBatch);
-            currentBatch = new ArrayList<>();
+    public void addToQueue(String name, Collection<Var> vars) {
+        if(!batchesMap.containsKey(name)) batchesMap.put(name,new HashSet<>());
+        batchesMap.get(name).addAll(vars);
+        if (batchesMap.get(name).size() >= batchSize) {
+            submitToExecutor(name, batchesMap.get(name));
+            batchesMap.remove(name);
+            batchesMap.put(name, new HashSet<>());
         }
     }
-    private void submitToExecutor(Collection<Var> vars) {
+
+    private void submitToExecutor(String name, Collection<Var> vars) {
         try {
             limitSem.acquire();
-            executor.submit(() -> loadData(vars));
+            executor.submit(() -> loadData(name, vars));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void addToQueue(Var var) {
-        addToQueue(Collections.singletonList(var));
+    public void addToQueue(String name, Var var) {
+        addToQueue(name, Collections.singletonList(var));
     }
 
-    public void waitToFinish(){
-        if(currentBatch.size()>0){
-            executor.submit(() -> loadData(currentBatch));
+    public void waitToFinish() {
+        // scorri tutta la mappa dei batchesMap e vai a tuono
+        // How to wait for specific keyspace
+        if (batchesMap.get("mindmaps").size() > 0) {
+            executor.submit(() -> loadData("mindmaps",batchesMap.get("mindmaps")));
         }
-        try{
+        try {
             executor.shutdown();
             executor.awaitTermination(5, TimeUnit.MINUTES);
             System.out.println("All tasks submitted, waiting for termination..");
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
             System.out.println("ALL TASKS DONE!");
@@ -86,13 +81,14 @@ public class BlockingLoader {
         }
     }
 
-    private List<String> loadData(Collection<Var> batch) {
+    private List<String> loadData(String name, Collection<Var> batch) {
         List<String> errors = new ArrayList<>();
 
         // Attempt committing the transaction a certain number of times
         // If a transaction fails, it must be repeated from scratch because Titan is forgetful
         for (int i = 0; i < REPEAT_COMMITS; i++) {
-            MindmapsTransaction transaction = graph.newTransaction();
+            MindmapsTransaction transaction = GraphFactory.getInstance().getGraph(name).newTransaction();
+            transaction.enableBatchLoading(); //eventually this will go away
             try {
 
                 QueryBuilder.build(transaction).insert(batch).execute();
@@ -102,7 +98,6 @@ public class BlockingLoader {
                     return errors;
                 }
 
-                System.out.println();
                 transaction.commit();
 
                 limitSem.release();
