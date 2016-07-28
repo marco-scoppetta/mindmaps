@@ -41,29 +41,12 @@ public class GraphFactory {
 
     }
 
-
-    //For now this method and buildMindmapGraph are the same, but the future is full of hopes! And we should have in factory a way to enable batchloading on a new graph
-//    public MindmapsGraph buildMindmapsGraphBatchLoading() {
-//        MindmapsGraph graph = buildGraph(DEFAULT_NAME, graphConfig);
-//        return graph;
-//    }
-//
-//    public MindmapsGraph buildMindmapsGraph() {
-//        return buildGraph(DEFAULT_NAME, graphConfig);
-//    }
-
-    public MindmapsGraph getGraph(String name) {
+    public synchronized MindmapsGraph getGraph(String name) {
         return titanGraphFactory.getGraph(name, null, graphConfig);
     }
 
-//    private synchronized MindmapsGraph buildGraph(String name, String config) {
-//
-//        MindmapsGraph mindmapsGraph = titanGraphFactory.getGraph(name, "localhost", config);
-//
-//        //Move to Factory:
-//        mindmapsGraph.getGraph().configuration().setProperty("ids.block-size", idBlockSize);
-//
-//        return mindmapsGraph;
+//    public synchronized MindmapsGraph getGraphBtachLoading(String name){
+//        //yeeee
 //    }
 }
 

@@ -1,9 +1,6 @@
-package io.mindmaps;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import io.mindmaps.factory.GraphFactory;
-import io.mindmaps.graql.api.query.Var;
 import io.mindmaps.loader.BlockingLoader;
 import io.mindmaps.migration.TransactionManager;
 import io.mindmaps.migration.sql.SqlDataMigrator;
@@ -12,52 +9,45 @@ import io.mindmaps.migration.sql.SqlSchemaMigrator;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
 
 public class EngineMigrator {
 
-    //    private static TransactionManager manager;
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) {
         disableInternalLogs();
-//        MindmapsTransaction tx = graph.newTransaction();
-//        tx.enableBatchLoading();
-//        System.out.println(" EHIIII BATCH LOADING ENABLED: " + tx.isBatchLoadingEnabled());
-//        manager = new TransactionManager(graph);
 
-        BlockingLoader loader = new BlockingLoader();
-        Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost/occrp_datavault", "postgres", "postgres");
+
+        BlockingLoader loader = new BlockingLoader(Integer.parseInt(args[0]), Integer.parseInt(args[1]),"mindmaps");
+        Connection connection = null;
+        System.out.println("TRYING TO CONNECT TO PSQL");
+        try {
+            connection = DriverManager.getConnection("jdbc:postgresql://10.0.1.9/occrp_datavault", "postgres", "postgres");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        System.out.println("SUCCESSFULLY CONNECTED");
 
         SqlSchemaMigrator schemamigrator = new SqlSchemaMigrator(connection);
         SqlDataMigrator datamigrator = new SqlDataMigrator(connection);
         int i = 0;
 
-        Collection<Var> currentBatch = new ArrayList<>();
 
-
+        System.out.println("about to migrate schema");
         TransactionManager manager = new TransactionManager(GraphFactory.getInstance().getGraph("mindmaps"));
         manager.setBatchSize(200);
         while (schemamigrator.hasNext()) {
             manager.insert(schemamigrator.next());
         }
-
         manager.waitToFinish();
+        System.out.println("schema loaded, migrate data");
 
         long start = System.currentTimeMillis();
         while (datamigrator.hasNext()) {
             i++;
-            loader.addToQueue("mindmaps", datamigrator.next());
-//            currentBatch.addAll(datamigrator.next());
+            loader.addToQueue(datamigrator.next());
+
             if (i % 20 == 0) {
                 System.out.println("== NEW BATCH !!! ====> " + i);
-//            manager.insert(datamigrator.next());
-//                currentBatch = new ArrayList<>();
-//                try {
-//                    Thread.sleep(100);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
             }
 
             if (i > 10000) {

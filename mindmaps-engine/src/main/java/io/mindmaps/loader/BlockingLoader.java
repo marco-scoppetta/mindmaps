@@ -1,8 +1,8 @@
 package io.mindmaps.loader;
 
 import io.mindmaps.core.Cache;
-import io.mindmaps.core.dao.MindmapsTransaction;
 import io.mindmaps.core.exceptions.MindmapsValidationException;
+import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.query.QueryBuilder;
 import io.mindmaps.graql.api.query.Var;
@@ -18,56 +18,71 @@ import java.util.concurrent.TimeUnit;
 public class BlockingLoader {
 
     private final Logger LOG = LoggerFactory.getLogger(BlockingLoader.class);
+    private final String CONFIG_FILE = "application.properties";
+    private final String GRAPH_NAME_PROPERTY = "graphdatabase.name";
+    private final String BATCH_SIZE_PROPERTY = "blockingLoader.batch-size";
+    private final String NUM_THREADS_PROPERTY = "blockingLoader.num-threads";
 
-
-    private static final int NUMBER_THREADS = 16;
     private ExecutorService executor;
     private Cache cache;
-    private ExecutorService flushToCache;
-    private Map<String, Collection<Var>> batchesMap;
-    private int batchSize = 30;
-    private static Semaphore limitSem = new Semaphore(NUMBER_THREADS * 2);
+    private Collection<Var> batch;
+    private int batchSize;
+    private static Semaphore transactionsSemaphore;
     private static final int REPEAT_COMMITS = 5;
+    private String graphName;
 
 
+    //Empty constructor uses default graph name, num of threads and batch size from config file.
     public BlockingLoader() {
+        Properties prop = new Properties();
+        try {
+            prop.load(getClass().getClassLoader().getResourceAsStream(CONFIG_FILE));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        int defaultNumOfThreads = Integer.parseInt(prop.getProperty(NUM_THREADS_PROPERTY));
+        int defaultBatchSize = Integer.parseInt(prop.getProperty(BATCH_SIZE_PROPERTY));
+        String defaultGraphName = prop.getProperty(GRAPH_NAME_PROPERTY);
 
-        flushToCache = Executors.newFixedThreadPool(10);
-        cache = Cache.getInstance();
-        executor = Executors.newFixedThreadPool(NUMBER_THREADS);
-        batchesMap = new HashMap<>();
-
-        LOG.info("===============  SEMAPHORE SIZE: " + limitSem.availablePermits());
+        new BlockingLoader(defaultNumOfThreads,defaultBatchSize ,defaultGraphName );
     }
 
-    public void addToQueue(String name, Collection<Var> vars) {
-        if(!batchesMap.containsKey(name)) batchesMap.put(name,new HashSet<>());
-        batchesMap.get(name).addAll(vars);
-        if (batchesMap.get(name).size() >= batchSize) {
-            submitToExecutor(name, batchesMap.get(name));
-            batchesMap.remove(name);
-            batchesMap.put(name, new HashSet<>());
+    public BlockingLoader(int numThreads, int batchSizeInit, String graphNameInit) {
+
+        graphName = graphNameInit;
+        cache = Cache.getInstance();
+        batch = new HashSet<>();
+
+        batchSize = batchSizeInit;
+        executor = Executors.newFixedThreadPool(numThreads);
+        transactionsSemaphore = new Semaphore(numThreads * 3);
+
+    }
+
+    public void addToQueue(Collection<Var> vars) {
+        batch.addAll(vars);
+        if (batch.size() >= batchSize) {
+            submitToExecutor(batch);
+            batch = new HashSet<>();
         }
     }
 
-    private void submitToExecutor(String name, Collection<Var> vars) {
+    private void submitToExecutor(Collection<Var> vars) {
         try {
-            limitSem.acquire();
-            executor.submit(() -> loadData(name, vars));
+            transactionsSemaphore.acquire();
+            executor.submit(() -> loadData(graphName, vars));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void addToQueue(String name, Var var) {
-        addToQueue(name, Collections.singletonList(var));
+    public void addToQueue(Var var) {
+        addToQueue(Collections.singletonList(var));
     }
 
     public void waitToFinish() {
-        // scorri tutta la mappa dei batchesMap e vai a tuono
-        // How to wait for specific keyspace
-        if (batchesMap.get("mindmaps").size() > 0) {
-            executor.submit(() -> loadData("mindmaps",batchesMap.get("mindmaps")));
+        if (batch.size() > 0) {
+            executor.submit(() -> loadData(graphName,batch));
         }
         try {
             executor.shutdown();
@@ -84,10 +99,8 @@ public class BlockingLoader {
     private List<String> loadData(String name, Collection<Var> batch) {
         List<String> errors = new ArrayList<>();
 
-        // Attempt committing the transaction a certain number of times
-        // If a transaction fails, it must be repeated from scratch because Titan is forgetful
         for (int i = 0; i < REPEAT_COMMITS; i++) {
-            MindmapsTransaction transaction = GraphFactory.getInstance().getGraph(name).newTransaction();
+            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraph(name).newTransaction();
             transaction.enableBatchLoading(); //eventually this will go away
             try {
 
@@ -100,14 +113,18 @@ public class BlockingLoader {
 
                 transaction.commit();
 
-                limitSem.release();
+                if (errors.isEmpty()) {
+                    cache.addCacheJob(transaction.getModifiedCastingIds(), transaction.getModifiedRelationIds());
+                }
+
+                transactionsSemaphore.release();
                 return errors; //Is empty if no errors found
 
             } catch (MindmapsValidationException e) {
                 //If it's a validation exception there is no point in re-trying
                 System.out.println("Caught exception during validation" + e.getMessage());
 
-                limitSem.release();
+                transactionsSemaphore.release();
                 return errors;
             } catch (Exception e) {
                 //If it's not a validation exception we need to remain in the for loop
@@ -122,7 +139,7 @@ public class BlockingLoader {
         }
 
         //If we reach this point it means the transaction failed REPEAT_COMMITS times
-        limitSem.release();
+        transactionsSemaphore.release();
         errors.add("Could not commit to graph after " + REPEAT_COMMITS + " retries");
         return errors;
     }

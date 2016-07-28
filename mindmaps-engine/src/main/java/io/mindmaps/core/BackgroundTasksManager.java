@@ -41,6 +41,7 @@ public class BackgroundTasksManager {
         cache = Cache.getInstance();
     }
 
+    //STILL NEED TO FIX THIS
     //@Scheduled(fixedDelay = 300000)
     public void performPostprocessing() {
         futures = ConcurrentHashMap.newKeySet();

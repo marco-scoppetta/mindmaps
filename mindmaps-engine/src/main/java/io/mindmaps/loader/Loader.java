@@ -10,9 +10,10 @@ import io.mindmaps.graql.api.query.Var;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
 
 public class Loader {
@@ -22,20 +23,10 @@ public class Loader {
 
     private Cache cache;
 
-    private int NUM_THREADS = 9; // READ FROM CONFIG FILE!!
-
-    private ExecutorService flushToCache;
     private static final int REPEAT_COMMITS = 5;
-    private static Loader instance = null;
-
-//    public static synchronized Loader getInstance() {
-//        if (instance == null) instance = new Loader();
-//        return instance;
-//    }
 
 
     public Loader() {
-        flushToCache = Executors.newFixedThreadPool(10);
         queueManager = QueueManager.getInstance();
         cache = Cache.getInstance();
     }
@@ -58,9 +49,9 @@ public class Loader {
     }
 
     private class loadableVars implements LoadableBatch {
-        private List<Var> batchToLoad;
+        private Collection<Var> batchToLoad;
 
-        public loadableVars(List<Var> batch) {
+        public loadableVars(Collection<Var> batch) {
             batchToLoad = batch;
         }
 
@@ -79,7 +70,11 @@ public class Loader {
         return queueManager.addJob(() -> loadData(name, new loadableVars(batchToLoad)));
     }
 
-    private List<String> loadData(String name, LoadableBatch batch) {
+    public List<String> loadData(String name, Collection<Var> batch){
+        return loadData(name, new loadableVars(batch));
+    }
+
+    public List<String> loadData(String name, LoadableBatch batch) {
         List<String> errors = new ArrayList<>();
 
         // Attempt committing the transaction a certain number of times
@@ -96,22 +91,21 @@ public class Loader {
                     return errors;
                 }
 
-                Map<String, Map<String, Set<String>>> castingIds = transaction.getModifiedCastingIds();
-                Map<String, Set<String>> relationIds = transaction.getModifiedRelationIds();
-
                 transaction.commit();
 
                 //flush to cache for post processing
                 if (errors.isEmpty()) {
-                    flushToCache.submit(() -> writeNewJobsToCache(castingIds, relationIds));
+                    cache.addCacheJob(transaction.getModifiedCastingIds(), transaction.getModifiedRelationIds());
                 }
+                return errors; //Is empty if no errors found
 
             } catch (MindmapsValidationException e) {
+                //If it's a validation exception there is no point in re-trying
                 System.out.println("Caught exception during validation" + e.getMessage());
                 return errors;
             } catch (Exception e) {
+                //If it's not a validation exception we need to remain in the for loop
                 handleError(e, 1);
-                continue;
             } finally {
                 try {
                     transaction.close();
@@ -119,10 +113,10 @@ public class Loader {
                     e.printStackTrace();
                 }
             }
-            return errors; //Is empty if no errors found
         }
 
-        errors.add("could not commit to graph after " + REPEAT_COMMITS + " retries");
+        //If we reach this point it means the transaction failed REPEAT_COMMITS times
+        errors.add("Could not commit to graph after " + REPEAT_COMMITS + " retries");
         return errors;
     }
 
@@ -137,28 +131,6 @@ public class Loader {
             e1.printStackTrace();
         }
     }
-
-    private void writeNewJobsToCache(Map<String, Map<String, Set<String>>> futureCastingJobs, Map<String, Set<String>> futureAssertionJobs) {
-        LOG.info("Updating casting jobs . . .");
-        for (Map.Entry<String, Map<String, Set<String>>> entry : futureCastingJobs.entrySet()) {
-            String type = entry.getKey();
-            for (Map.Entry<String, Set<String>> innerEntry : entry.getValue().entrySet()) {
-                String key = innerEntry.getKey();
-                for (String value : innerEntry.getValue()) {
-                    cache.addJobCasting(type, key, value);
-                }
-            }
-        }
-
-        LOG.info("Updating assertion jobs . . .");
-        for (Map.Entry<String, Set<String>> entry : futureAssertionJobs.entrySet()) {
-            String type = entry.getKey();
-            for (String value : entry.getValue()) {
-                cache.addJobAssertion(type, value);
-            }
-        }
-    }
-
 
 }
 

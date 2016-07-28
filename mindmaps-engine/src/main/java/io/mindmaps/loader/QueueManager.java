@@ -18,19 +18,8 @@ public class QueueManager {
     private AtomicInteger currentJobs;
     private AtomicInteger finishedJobs;
 
-    public int getErrorJobs() {
-        return errorJobs.get();
-    }
-
     private AtomicInteger errorJobs;
 
-    public int getFinishedJobs() {
-        return finishedJobs.get();
-    }
-
-    public int getTotalJobs() {
-        return totalJobs.get();
-    }
 
     private AtomicInteger totalJobs;
     private AtomicLong lastJobFinished;
