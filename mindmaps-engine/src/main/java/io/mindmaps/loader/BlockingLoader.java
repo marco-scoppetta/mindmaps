@@ -65,6 +65,19 @@ public class BlockingLoader {
         new BlockingLoader(defaultNumOfThreads, defaultBatchSize, defaultGraphName);
     }
 
+    public BlockingLoader(String name) {
+        Properties prop = new Properties();
+        try {
+            prop.load(getClass().getClassLoader().getResourceAsStream(CONFIG_FILE));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        int defaultNumOfThreads = Integer.parseInt(prop.getProperty(NUM_THREADS_PROPERTY));
+        int defaultBatchSize = Integer.parseInt(prop.getProperty(BATCH_SIZE_PROPERTY));
+
+        new BlockingLoader(defaultNumOfThreads, defaultBatchSize, name);
+    }
+
     public BlockingLoader(int numThreads, int batchSizeInit, String graphNameInit) {
 
         graphName = graphNameInit;

@@ -43,12 +43,10 @@ public class ImportFromFile {
 
     private final org.slf4j.Logger LOG = LoggerFactory.getLogger(ImportFromFile.class);
     private final String BATCH_SIZE_PROPERTY = "importFromFile.batch-size";
-    private final String SLEEP_TIME_PROPERTY = "importFromFile.sleep-time";
     private final String GRAPH_NAME_PROPERTY = "graphdatabase.name";
 
 
     private int batchSize;
-    private int sleepTime;
     private String graphName;
 
     Map<String, String> entitiesMap;
@@ -78,10 +76,9 @@ public class ImportFromFile {
 
         entitiesMap = new ConcurrentHashMap<>();
         relationshipsList = new ArrayList<>();
-        loader = new BlockingLoader();
         batchSize = Integer.parseInt(prop.getProperty(BATCH_SIZE_PROPERTY));
-        sleepTime = Integer.parseInt(prop.getProperty(SLEEP_TIME_PROPERTY));
         graphName = graphNameInit;
+        loader = new BlockingLoader(graphName);
 
 
         post("/importDataFromFile/", (req, res) -> {
@@ -108,7 +105,7 @@ public class ImportFromFile {
         try {
             scanFile(parseEntity, dataFile);
             scanFile(parseRelation, dataFile);
-            //loader.waitToFinish(); TO DO: think a way of tracking jobs submitted to the executor relative to the current graph/client, using Futures?
+            loader.waitToFinish();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -135,7 +132,7 @@ public class ImportFromFile {
 
             if (i % batchSize == 0 && latestBatchNumber != i) {
                 latestBatchNumber = i;
-                loader.addToQueue(graphName, currentVarsBatch);
+                loader.addToQueue(currentVarsBatch);
                 LOG.info("[ New batch:  " + i + " ]");
                 currentVarsBatch = new ArrayList<>();
             }
@@ -144,7 +141,7 @@ public class ImportFromFile {
         //Digest the remaining Vars in the batch.
 
         if (currentVarsBatch.size() > 0) {
-            loader.addToQueue(graphName, currentVarsBatch);
+            loader.addToQueue(currentVarsBatch);
             LOG.info("[ New batch:  " + i + " ]");
         }
 
