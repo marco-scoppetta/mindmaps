@@ -1,3 +1,21 @@
+/*
+ * MindmapsDB - A Distributed Semantic Database
+ * Copyright (C) 2016  Mindmaps Research Ltd
+ *
+ * MindmapsDB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MindmapsDB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
+ */
+
 package io.mindmaps.factory;
 
 import com.thinkaurelius.titan.core.*;
@@ -8,10 +26,7 @@ import io.mindmaps.core.dao.MindmapsGraph;
 import io.mindmaps.core.exceptions.ErrorMessage;
 import io.mindmaps.core.implementation.MindmapsTitanGraph;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
-import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +53,8 @@ class MindmapsTitanGraphFactory implements MindmapsGraphFactory{
         String key = name + "_" + address;
         if(openGraphs.containsKey(key)){
             MindmapsTitanGraph mindmapsTitanGraph = openGraphs.get(key);
-            if(((TitanGraph)mindmapsTitanGraph.getGraph()).isOpen()){
+            TitanGraph graph = (TitanGraph) mindmapsTitanGraph.getGraph();
+            if(graph.isOpen()){
                 return mindmapsTitanGraph;
             }
         }

@@ -1,3 +1,21 @@
+/*
+ * MindmapsDB - A Distributed Semantic Database
+ * Copyright (C) 2016  Mindmaps Research Ltd
+ *
+ * MindmapsDB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MindmapsDB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
+ */
+
 package io.mindmaps.core.implementation;
 
 import io.mindmaps.core.exceptions.NoEdgeException;
@@ -18,7 +36,7 @@ class CastingImpl extends ConceptImpl {
     public RoleTypeImpl getRole() {
         Concept concept = getParentIsa();
         if(concept != null)
-            return getMindmapsGraph().getElementFactory().buildRoleType(concept);
+            return getMindmapsTransaction().getElementFactory().buildRoleType(concept);
         else
             throw new NoEdgeException(toString(), DataType.BaseType.ROLE_TYPE.name());
     }
@@ -26,14 +44,14 @@ class CastingImpl extends ConceptImpl {
     public InstanceImpl getRolePlayer() {
         Concept concept = getOutgoingNeighbour(DataType.EdgeLabel.ROLE_PLAYER);
         if(concept != null)
-            return getMindmapsGraph().getElementFactory().buildSpecificInstance(concept);
+            return getMindmapsTransaction().getElementFactory().buildSpecificInstance(concept);
         else
             return null;
     }
 
     public CastingImpl setHash(RoleTypeImpl role, InstanceImpl rolePlayer){
         String hash;
-        if(getMindmapsGraph().isBatchLoadingEnabled())
+        if(getMindmapsTransaction().isBatchLoadingEnabled())
             hash = "CastingBaseId_" + this.getBaseIdentifier() + UUID.randomUUID().toString();
         else
             hash = generateNewHash(role, rolePlayer);
@@ -51,7 +69,7 @@ class CastingImpl extends ConceptImpl {
         Set<ConceptImpl> concepts = thisRef.getIncomingNeighbours(DataType.EdgeLabel.CASTING);
 
         if(concepts.size() > 0){
-            relations.addAll(concepts.stream().map(getMindmapsGraph().getElementFactory()::buildRelation).collect(Collectors.toList()));
+            relations.addAll(concepts.stream().map(getMindmapsTransaction().getElementFactory()::buildRelation).collect(Collectors.toList()));
         } else {
             throw new NoEdgeException(toString(), DataType.BaseType.RELATION.name());
         }

@@ -1,3 +1,21 @@
+/*
+ * MindmapsDB - A Distributed Semantic Database
+ * Copyright (C) 2016  Mindmaps Research Ltd
+ *
+ * MindmapsDB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MindmapsDB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
+ */
+
 package io.mindmaps.core.implementation;
 
 import io.mindmaps.core.exceptions.ConceptException;
@@ -18,7 +36,7 @@ class RelationImpl extends InstanceImpl<Relation, RelationType, String> implemen
 
     public Set<CastingImpl> getMappingCasting() {
         Set<CastingImpl> castings = new HashSet<>();
-        getOutgoingNeighbours(DataType.EdgeLabel.CASTING).forEach(casting -> castings.add(getMindmapsGraph().getElementFactory().buildCasting(casting)));
+        getOutgoingNeighbours(DataType.EdgeLabel.CASTING).forEach(casting -> castings.add(getMindmapsTransaction().getElementFactory().buildCasting(casting)));
         return castings;
     }
 
@@ -64,13 +82,13 @@ class RelationImpl extends InstanceImpl<Relation, RelationType, String> implemen
     @Override
     public Set<Instance> scopes() {
         HashSet<Instance> scopes = new HashSet<>();
-        getOutgoingNeighbours(DataType.EdgeLabel.HAS_SCOPE).forEach(concept -> scopes.add(getMindmapsGraph().getElementFactory().buildSpecificInstance(concept)));
+        getOutgoingNeighbours(DataType.EdgeLabel.HAS_SCOPE).forEach(concept -> scopes.add(getMindmapsTransaction().getElementFactory().buildSpecificInstance(concept)));
         return scopes;
     }
 
     @Override
     public Relation scope(Instance instance) {
-        putEdge(getMindmapsGraph().getElementFactory().buildEntity(instance), DataType.EdgeLabel.HAS_SCOPE);
+        putEdge(getMindmapsTransaction().getElementFactory().buildEntity(instance), DataType.EdgeLabel.HAS_SCOPE);
         return this;
     }
 
@@ -80,12 +98,12 @@ class RelationImpl extends InstanceImpl<Relation, RelationType, String> implemen
             throw new IllegalArgumentException(ErrorMessage.ROLE_IS_NULL.getMessage(instance));
         }
 
-        if(mindmapsGraph.isBatchLoadingEnabled()) {
+        if(mindmapsTransaction.isBatchLoadingEnabled()) {
             return addNewRolePlayer(null, roleType, instance);
         } else {
             Map<RoleType, Instance> roleMap = rolePlayers();
             roleMap.put(roleType, instance);
-            Relation otherRelation = mindmapsGraph.getRelation(type(), roleMap);
+            Relation otherRelation = mindmapsTransaction.getRelation(type(), roleMap);
 
             if(otherRelation == null){
                 return addNewRolePlayer(roleMap, roleType, instance);
@@ -100,9 +118,9 @@ class RelationImpl extends InstanceImpl<Relation, RelationType, String> implemen
     }
     private Relation addNewRolePlayer(Map<RoleType, Instance> roleMap, RoleType roleType, Instance instance){
         if(instance != null)
-            mindmapsGraph.putCasting((RoleTypeImpl) roleType, (InstanceImpl) instance, this);
+            mindmapsTransaction.putCasting((RoleTypeImpl) roleType, (InstanceImpl) instance, this);
 
-        if(mindmapsGraph.isBatchLoadingEnabled()){
+        if(mindmapsTransaction.isBatchLoadingEnabled()){
             setHash(null);
         } else {
             setHash(roleMap);
@@ -114,7 +132,7 @@ class RelationImpl extends InstanceImpl<Relation, RelationType, String> implemen
 
     @Override
     public Relation deleteScope(Instance scope) throws ConceptException {
-        deleteEdgeTo(DataType.EdgeLabel.HAS_SCOPE, getMindmapsGraph().getElementFactory().buildEntity(scope));
+        deleteEdgeTo(DataType.EdgeLabel.HAS_SCOPE, getMindmapsTransaction().getElementFactory().buildEntity(scope));
         return this;
     }
 
@@ -125,9 +143,9 @@ class RelationImpl extends InstanceImpl<Relation, RelationType, String> implemen
         // tracking
         rolePlayers.forEach(r -> {
             if(r != null)
-                getMindmapsGraph().getTransaction().putConcept(getMindmapsGraph().getElementFactory().buildSpecificInstance(r));
+                getMindmapsTransaction().getTransaction().putConcept(getMindmapsTransaction().getElementFactory().buildSpecificInstance(r));
         });
-        this.getMappingCasting().forEach(c -> getMindmapsGraph().getTransaction().putConcept(c));
+        this.getMappingCasting().forEach(c -> getMindmapsTransaction().getTransaction().putConcept(c));
 
         for(Instance instance : rolePlayers){
             if(instance != null && (instance.getId() != null || instance.getSubject() != null)){

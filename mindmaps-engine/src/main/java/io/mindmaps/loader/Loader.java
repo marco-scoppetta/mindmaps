@@ -1,3 +1,21 @@
+/*
+ * MindmapsDB - A Distributed Semantic Database
+ * Copyright (C) 2016  Mindmaps Research Ltd
+ *
+ * MindmapsDB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MindmapsDB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
+ */
+
 package io.mindmaps.loader;
 
 import io.mindmaps.core.Cache;
@@ -80,8 +98,7 @@ public class Loader {
         // Attempt committing the transaction a certain number of times
         // If a transaction fails, it must be repeated from scratch because Titan is forgetful
         for (int i = 0; i < REPEAT_COMMITS; i++) {
-            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraph(name).newTransaction();
-            transaction.enableBatchLoading(); // eventually this will go away
+            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraphBtachLoading(name).newTransaction();
             try {
 
                 batch.load(transaction);

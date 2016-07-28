@@ -1,3 +1,21 @@
+/*
+ * MindmapsDB - A Distributed Semantic Database
+ * Copyright (C) 2016  Mindmaps Research Ltd
+ *
+ * MindmapsDB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MindmapsDB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
+ */
+
 package io.mindmaps.core.implementation;
 
 import io.mindmaps.core.model.Type;
@@ -67,13 +85,13 @@ class RuleImpl extends InstanceImpl<Rule, RuleType, String> implements Rule {
 
     @Override
     public Rule addHypothesis(Type type) {
-        putEdge(getMindmapsGraph().getElementFactory().buildSpecificConceptType(type), DataType.EdgeLabel.HYPOTHESIS);
+        putEdge(getMindmapsTransaction().getElementFactory().buildSpecificConceptType(type), DataType.EdgeLabel.HYPOTHESIS);
         return getThis();
     }
 
     @Override
     public Rule addConclusion(Type type) {
-        putEdge(getMindmapsGraph().getElementFactory().buildSpecificConceptType(type), DataType.EdgeLabel.CONCLUSION);
+        putEdge(getMindmapsTransaction().getElementFactory().buildSpecificConceptType(type), DataType.EdgeLabel.CONCLUSION);
         return getThis();
     }
 
@@ -81,7 +99,7 @@ class RuleImpl extends InstanceImpl<Rule, RuleType, String> implements Rule {
     public Collection<Type> getHypothesisTypes() {
         Collection<Type> types = new HashSet<>();
         getOutgoingNeighbours(DataType.EdgeLabel.HYPOTHESIS).forEach(concept -> {
-            types.add(getMindmapsGraph().getElementFactory().buildSpecificConceptType(concept));
+            types.add(getMindmapsTransaction().getElementFactory().buildSpecificConceptType(concept));
         });
         return types;
     }
@@ -90,7 +108,7 @@ class RuleImpl extends InstanceImpl<Rule, RuleType, String> implements Rule {
     public Collection<Type> getConclusionTypes() {
         Collection<Type> types = new HashSet<>();
         getOutgoingNeighbours(DataType.EdgeLabel.CONCLUSION).forEach(concept -> {
-            types.add(getMindmapsGraph().getElementFactory().buildSpecificConceptType(concept));
+            types.add(getMindmapsTransaction().getElementFactory().buildSpecificConceptType(concept));
         });
         return types;
     }

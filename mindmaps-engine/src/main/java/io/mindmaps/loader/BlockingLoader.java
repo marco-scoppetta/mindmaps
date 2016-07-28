@@ -1,3 +1,21 @@
+/*
+ * MindmapsDB - A Distributed Semantic Database
+ * Copyright (C) 2016  Mindmaps Research Ltd
+ *
+ * MindmapsDB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MindmapsDB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
+ */
+
 package io.mindmaps.loader;
 
 import io.mindmaps.core.Cache;
@@ -44,7 +62,7 @@ public class BlockingLoader {
         int defaultBatchSize = Integer.parseInt(prop.getProperty(BATCH_SIZE_PROPERTY));
         String defaultGraphName = prop.getProperty(GRAPH_NAME_PROPERTY);
 
-        new BlockingLoader(defaultNumOfThreads,defaultBatchSize ,defaultGraphName );
+        new BlockingLoader(defaultNumOfThreads, defaultBatchSize, defaultGraphName);
     }
 
     public BlockingLoader(int numThreads, int batchSizeInit, String graphNameInit) {
@@ -82,7 +100,7 @@ public class BlockingLoader {
 
     public void waitToFinish() {
         if (batch.size() > 0) {
-            executor.submit(() -> loadData(graphName,batch));
+            executor.submit(() -> loadData(graphName, batch));
         }
         try {
             executor.shutdown();
@@ -100,8 +118,8 @@ public class BlockingLoader {
         List<String> errors = new ArrayList<>();
 
         for (int i = 0; i < REPEAT_COMMITS; i++) {
-            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraph(name).newTransaction();
-            transaction.enableBatchLoading(); //eventually this will go away
+            // we probably want to be able to swith ON or OFF batchloading, so maybe just better ask for graph and decide here whether activate batchloading
+            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraphBtachLoading(name).newTransaction();
             try {
 
                 QueryBuilder.build(transaction).insert(batch).execute();

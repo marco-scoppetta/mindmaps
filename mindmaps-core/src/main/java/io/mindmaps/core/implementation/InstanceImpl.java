@@ -1,3 +1,21 @@
+/*
+ * MindmapsDB - A Distributed Semantic Database
+ * Copyright (C) 2016  Mindmaps Research Ltd
+ *
+ * MindmapsDB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MindmapsDB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
+ */
+
 package io.mindmaps.core.implementation;
 
 import io.mindmaps.core.exceptions.ConceptException;
@@ -20,10 +38,10 @@ abstract class InstanceImpl<T extends Instance, V extends Type, D> extends Conce
         deleteNode();
         for(CastingImpl casting: castings){
             Set<RelationImpl> relations = casting.getRelations();
-            getMindmapsGraph().getTransaction().putConcept(casting);
+            getMindmapsTransaction().getTransaction().putConcept(casting);
 
             for(RelationImpl relation : relations) {
-                getMindmapsGraph().getTransaction().putConcept(relation);
+                getMindmapsTransaction().getTransaction().putConcept(relation);
                 relation.cleanUp();
             }
 
@@ -65,7 +83,7 @@ abstract class InstanceImpl<T extends Instance, V extends Type, D> extends Conce
         InstanceImpl<?, ?, ?> parent = this;
 
         parent.castings().forEach(c -> {
-            CastingImpl casting = getMindmapsGraph().getElementFactory().buildCasting(c);
+            CastingImpl casting = getMindmapsTransaction().getElementFactory().buildCasting(c);
             if (roleTypeItemIdentifier.size() != 0) {
                 if (roleTypeItemIdentifier.contains(casting.getType()))
                     relations.addAll(casting.getRelations());
@@ -82,7 +100,7 @@ abstract class InstanceImpl<T extends Instance, V extends Type, D> extends Conce
         Set<RoleType> roleTypes = new HashSet<>();
         ConceptImpl<?, ?, ?> parent = this;
         parent.getIncomingNeighbours(DataType.EdgeLabel.ROLE_PLAYER).forEach(c -> {
-            roleTypes.add(getMindmapsGraph().getElementFactory().buildCasting(c).getRole());
+            roleTypes.add(getMindmapsTransaction().getElementFactory().buildCasting(c).getRole());
         });
         return roleTypes;
     }

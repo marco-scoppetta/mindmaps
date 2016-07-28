@@ -1,3 +1,21 @@
+/*
+ * MindmapsDB - A Distributed Semantic Database
+ * Copyright (C) 2016  Mindmaps Research Ltd
+ *
+ * MindmapsDB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MindmapsDB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
+ */
+
 package io.mindmaps.core.implementation;
 
 import io.mindmaps.core.dao.MindmapsGraph;
@@ -21,16 +39,20 @@ public abstract class MindmapsTransactionImpl implements MindmapsTransaction, Au
     private final ElementFactory elementFactory;
     private Graph graph;
     private final Transaction transaction;
-    private boolean batchLoading;
+    private final boolean batchLoadingEnabled;
 
-    public MindmapsTransactionImpl(Graph graph) {
+    public MindmapsTransactionImpl(Graph graph, boolean batchLoadingEnabled) {
         this.graph = graph;
+        this.batchLoadingEnabled = batchLoadingEnabled;
         transaction = new Transaction();
         elementFactory = new ElementFactory(this);
-        batchLoading = false;
     }
 
     public abstract MindmapsGraph getRootGraph();
+
+    public boolean isBatchLoadingEnabled(){
+        return batchLoadingEnabled;
+    }
 
     @SuppressWarnings("unchecked")
     public void initialiseMetaConcepts(){
@@ -148,21 +170,6 @@ public abstract class MindmapsTransactionImpl implements MindmapsTransaction, Au
 
     public Transaction getTransaction () {
         return transaction;
-    }
-
-    @Override
-    public void enableBatchLoading() {
-        batchLoading = true;
-    }
-
-    @Override
-    public void disableBatchLoading() {
-        batchLoading = false;
-    }
-
-    @Override
-    public boolean isBatchLoadingEnabled(){
-        return batchLoading;
     }
 
     //----------------------------------------------Concept Functionality-----------------------------------------------
