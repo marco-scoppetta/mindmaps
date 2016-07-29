@@ -18,7 +18,7 @@
 
 package io.mindmaps.loader;
 
-import io.mindmaps.core.BackgroundTasks;
+import io.mindmaps.postprocessing.BackgroundTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

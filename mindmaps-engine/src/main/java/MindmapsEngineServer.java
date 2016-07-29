@@ -16,18 +16,62 @@
  * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
  */
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import io.mindmaps.api.GraphFactoryController;
-import io.mindmaps.api.RestGETController;
+import io.mindmaps.api.ImportController;
+import io.mindmaps.api.RemoteShellController;
 import io.mindmaps.api.VisualiserController;
+import spark.Spark;
+
+import java.util.Properties;
+
+import static spark.Spark.port;
 
 public class MindmapsEngineServer {
+
+    private static final String CONFIG_FILE = "application.properties";
+    private static final String SERVER_PORT_PROPERTY = "server.port";
 
 
     public static void main(String[] args) {
 
-        new RestGETController();
+        // --- Spark JAVA configurations ---- //
+
+        //Spark.staticFileLocation("/public");
+
+        // Max number of concurrent threads
+        //  int maxThreads = 8;
+        //  threadPool(maxThreads);
+
+        Logger logger = (Logger) org.slf4j.LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        logger.setLevel(Level.INFO);
+
+
+        Properties prop = new Properties();
+        try {
+            prop.load(MindmapsEngineServer.class.getClassLoader().getResourceAsStream(CONFIG_FILE));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Listening port
+        port(Integer.parseInt(prop.getProperty(SERVER_PORT_PROPERTY)));
+
+        // --------------------------------- //
+
+
+        // ----- APIs --------- //
+
+        new RemoteShellController();
         new VisualiserController();
         new GraphFactoryController();
+        new ImportController();
 
+        // ------ WEB INTERFACE ----- //
+//        new Dashboard();
+//        new Visualiser();
+//        new GraqlShell();
+//        new Import();
     }
 }
