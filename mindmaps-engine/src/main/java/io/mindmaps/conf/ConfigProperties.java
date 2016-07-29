@@ -16,34 +16,12 @@
  * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
  */
 
-package io.mindmaps.api;
+package io.mindmaps.conf;
 
-import io.mindmaps.loader.Loader;
-
-import java.util.UUID;
-
-import static spark.Spark.post;
-
-public class TransactionController {
-
-    Loader loader;
-
-    public TransactionController() {
-
-        loader = new Loader();
-
-        post("/transaction", (request, response) -> {
-            //read graphName from http
-            String graphName = "mindmaps";
-            UUID uuid = loader.addJob(graphName,request.body());
-            if (uuid != null) {
-                response.status(201);
-                return uuid.toString();
-            } else {
-                response.status(405);
-                return "Error";
-            }
-        });
-
-    }
+public class ConfigProperties {
+    public static final String CONFIG_FILE = "application.properties";
+    public static final String GRAPH_CONFIG_PROPERTY = "graphdatabase.config";
+    public static final String GRAPH_NAME_PROPERTY = "graphdatabase.default-graph-name";
+    public static final String BATCH_SIZE_PROPERTY = "blockingLoader.batch-size";
+    public static final String NUM_THREADS_PROPERTY = "blockingLoader.num-threads";
 }

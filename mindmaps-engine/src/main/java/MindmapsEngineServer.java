@@ -19,8 +19,8 @@
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import io.mindmaps.api.GraphFactoryController;
-import io.mindmaps.api.ImportFromFile;
-import io.mindmaps.api.RestGETController;
+import io.mindmaps.api.ImportController;
+import io.mindmaps.api.RemoteShellController;
 import io.mindmaps.api.VisualiserController;
 import spark.Spark;
 import webapp.Dashboard;
@@ -67,10 +67,10 @@ public class MindmapsEngineServer {
 
         // ----- APIs --------- //
 
-        new RestGETController();
+        new RemoteShellController();
         new VisualiserController();
         new GraphFactoryController();
-        new ImportFromFile();
+        new ImportController();
 
         // ------ WEB INTERFACE ----- //
         new Dashboard();

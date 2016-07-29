@@ -18,6 +18,7 @@
 
 package io.mindmaps.factory;
 
+import io.mindmaps.conf.ConfigProperties;
 import io.mindmaps.core.dao.MindmapsGraph;
 
 import java.io.IOException;
@@ -48,8 +49,8 @@ public class GraphFactory {
         titanGraphFactory = new MindmapsTitanGraphFactory();
         Properties prop = new Properties();
         try {
-            prop.load(getClass().getClassLoader().getResourceAsStream("application.properties"));
-            graphConfig = prop.getProperty("graphdatabase.config");
+            prop.load(getClass().getClassLoader().getResourceAsStream(ConfigProperties.CONFIG_FILE));
+            graphConfig = prop.getProperty(ConfigProperties.GRAPH_CONFIG_PROPERTY);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -60,7 +61,7 @@ public class GraphFactory {
         return titanGraphFactory.getGraph(name, null, graphConfig);
     }
 
-    public synchronized MindmapsGraph getGraphBtachLoading(String name) {
+    public synchronized MindmapsGraph getGraphBatchLoading(String name) {
         MindmapsGraph graph = titanGraphFactory.getGraph(name, null, graphConfig);
         graph.enableBatchLoading();
         return graph;

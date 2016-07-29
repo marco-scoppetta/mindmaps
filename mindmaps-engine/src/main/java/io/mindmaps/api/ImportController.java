@@ -18,10 +18,12 @@
 
 package io.mindmaps.api;
 
+import io.mindmaps.conf.ConfigProperties;
 import io.mindmaps.core.dao.MindmapsTransaction;
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.parser.QueryParser;
 import io.mindmaps.graql.api.query.Var;
+import io.mindmaps.graql.internal.query.VarImpl;
 import io.mindmaps.loader.BlockingLoader;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
@@ -39,33 +41,33 @@ import java.util.function.BiPredicate;
 
 import static spark.Spark.post;
 
-public class ImportFromFile {
+public class ImportController {
 
-    private final org.slf4j.Logger LOG = LoggerFactory.getLogger(ImportFromFile.class);
-    private final String BATCH_SIZE_PROPERTY = "importFromFile.batch-size";
-    private final String GRAPH_NAME_PROPERTY = "graphdatabase.name";
+    private final org.slf4j.Logger LOG = LoggerFactory.getLogger(ImportController.class);
+
 
 
     private int batchSize;
     private String graphName;
 
+    //Use redis for caching LRU
     Map<String, String> entitiesMap;
     ArrayList<Var> relationshipsList;
 
     private BlockingLoader loader;
 
 
-    public ImportFromFile() {
+    public ImportController() {
         Properties prop = new Properties();
         try {
             prop.load(getClass().getClassLoader().getResourceAsStream("application.properties"));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        new ImportFromFile(prop.getProperty(GRAPH_NAME_PROPERTY));
+        new ImportController(prop.getProperty(ConfigProperties.GRAPH_NAME_PROPERTY));
     }
 
-    public ImportFromFile(String graphNameInit) {
+    public ImportController(String graphNameInit) {
 
         Properties prop = new Properties();
         try {
@@ -76,7 +78,7 @@ public class ImportFromFile {
 
         entitiesMap = new ConcurrentHashMap<>();
         relationshipsList = new ArrayList<>();
-        batchSize = Integer.parseInt(prop.getProperty(BATCH_SIZE_PROPERTY));
+        batchSize = Integer.parseInt(prop.getProperty(ConfigProperties.BATCH_SIZE_PROPERTY));
         graphName = graphNameInit;
         loader = new BlockingLoader(graphName);
 
@@ -149,11 +151,16 @@ public class ImportFromFile {
     }
 
     private boolean parseEntity(String command, List<Var> currentVarsBatch) {
+        Var var = null;
         try {
+            var = (Var) QueryParser.create().parseInsertQuery("insert " + command).admin().getVars().toArray()[0];
+            //catch more precise exception
+        } catch (IllegalArgumentException e) {
+            LOG.error("Exception caused by " + command);
+            e.printStackTrace();
+        }
 
-            Var var = (Var) QueryParser.create().parseInsertQuery("insert " + command).admin().getVars().toArray()[0];
-
-            if (!entitiesMap.containsKey(var.admin().getName()) && !var.admin().isRelation() && var.admin().getType().isPresent()) {
+        if (!entitiesMap.containsKey(var.admin().getName()) && !var.admin().isRelation() && var.admin().getType().isPresent()) {
 
                 if (var.admin().isUserDefinedName()) {
                     String varId = (var.admin().getId().isPresent()) ? var.admin().getId().get() : UUID.randomUUID().toString();
@@ -165,10 +172,6 @@ public class ImportFromFile {
 
                 return true;
             }
-        } catch (Exception e) {
-            LOG.error("Exception caused by " + command);
-            e.printStackTrace();
-        }
         return false;
     }
 
@@ -191,6 +194,7 @@ public class ImportFromFile {
                 currentVarsBatch.add(var);
             }
             return ready;
+            //fix execption
         } catch (Exception e) {
             LOG.error("Exception caused by " + command);
             e.printStackTrace();

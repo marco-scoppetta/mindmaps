@@ -33,19 +33,17 @@ import java.util.stream.Collectors;
 import static spark.Spark.get;
 import static spark.Spark.redirect;
 
-public class RestGETController {
+public class RemoteShellController {
 
-    private final Logger LOG = LoggerFactory.getLogger(RestGETController.class);
+    private final Logger LOG = LoggerFactory.getLogger(RemoteShellController.class);
 
 
-    //READ GRAPH NAME FROM HEADER OF HTTP REQUEST!!!!!
+    //READ GRAPH NAME FROM PARAMETER OF HTTP REQUEST!!!!!
     String graphName = "mindmaps";
 
-    public RestGETController() {
+    public RemoteShellController() {
 
         redirect.get("/", "/dashboard");
-
-        get("/hello", (req, res) -> "こんにちは from Mindmaps Engine!");
 
         get("/match", this::matchQuery);
 

@@ -18,7 +18,8 @@
 
 package io.mindmaps.loader;
 
-import io.mindmaps.core.Cache;
+import io.mindmaps.conf.ConfigProperties;
+import io.mindmaps.postprocessing.Cache;
 import io.mindmaps.core.exceptions.MindmapsValidationException;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
@@ -36,10 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class BlockingLoader {
 
     private final Logger LOG = LoggerFactory.getLogger(BlockingLoader.class);
-    private final String CONFIG_FILE = "application.properties";
-    private final String GRAPH_NAME_PROPERTY = "graphdatabase.name";
-    private final String BATCH_SIZE_PROPERTY = "blockingLoader.batch-size";
-    private final String NUM_THREADS_PROPERTY = "blockingLoader.num-threads";
+
 
     private ExecutorService executor;
     private Cache cache;
@@ -54,13 +52,13 @@ public class BlockingLoader {
     public BlockingLoader() {
         Properties prop = new Properties();
         try {
-            prop.load(getClass().getClassLoader().getResourceAsStream(CONFIG_FILE));
+            prop.load(getClass().getClassLoader().getResourceAsStream(ConfigProperties.CONFIG_FILE));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        int defaultNumOfThreads = Integer.parseInt(prop.getProperty(NUM_THREADS_PROPERTY));
-        int defaultBatchSize = Integer.parseInt(prop.getProperty(BATCH_SIZE_PROPERTY));
-        String defaultGraphName = prop.getProperty(GRAPH_NAME_PROPERTY);
+        int defaultNumOfThreads = Integer.parseInt(prop.getProperty(ConfigProperties.NUM_THREADS_PROPERTY));
+        int defaultBatchSize = Integer.parseInt(prop.getProperty(ConfigProperties.BATCH_SIZE_PROPERTY));
+        String defaultGraphName = prop.getProperty(ConfigProperties.GRAPH_NAME_PROPERTY);
 
         new BlockingLoader(defaultNumOfThreads, defaultBatchSize, defaultGraphName);
     }
@@ -68,12 +66,12 @@ public class BlockingLoader {
     public BlockingLoader(String name) {
         Properties prop = new Properties();
         try {
-            prop.load(getClass().getClassLoader().getResourceAsStream(CONFIG_FILE));
+            prop.load(getClass().getClassLoader().getResourceAsStream(ConfigProperties.CONFIG_FILE));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        int defaultNumOfThreads = Integer.parseInt(prop.getProperty(NUM_THREADS_PROPERTY));
-        int defaultBatchSize = Integer.parseInt(prop.getProperty(BATCH_SIZE_PROPERTY));
+        int defaultNumOfThreads = Integer.parseInt(prop.getProperty(ConfigProperties.NUM_THREADS_PROPERTY));
+        int defaultBatchSize = Integer.parseInt(prop.getProperty(ConfigProperties.BATCH_SIZE_PROPERTY));
 
         new BlockingLoader(defaultNumOfThreads, defaultBatchSize, name);
     }
@@ -132,7 +130,7 @@ public class BlockingLoader {
 
         for (int i = 0; i < REPEAT_COMMITS; i++) {
             // we probably want to be able to swith ON or OFF batchloading, so maybe just better ask for graph and decide here whether activate batchloading
-            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraphBtachLoading(name).newTransaction();
+            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraphBatchLoading(name).newTransaction();
             try {
 
                 QueryBuilder.build(transaction).insert(batch).execute();

@@ -1,18 +1,16 @@
 package io.mindmaps.api;
 
-import io.mindmaps.core.dao.MindmapsGraph;
-import io.mindmaps.factory.GraphFactory;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ImportFromFileTest {
+public class ImportControllerTest {
 
-    ImportFromFile importer;
+    ImportController importer;
 
     @Before
     public void setUp() throws Exception {
      //   MindmapsGraph graph = MindmapsTestGraphFactory.newEmptyGraph();
-        importer = new ImportFromFile();
+        importer = new ImportController();
     }
 
     @Test

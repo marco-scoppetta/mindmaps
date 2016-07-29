@@ -18,7 +18,7 @@
 
 package io.mindmaps.loader;
 
-import io.mindmaps.core.Cache;
+import io.mindmaps.postprocessing.Cache;
 import io.mindmaps.core.exceptions.MindmapsValidationException;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
@@ -98,7 +98,7 @@ public class Loader {
         // Attempt committing the transaction a certain number of times
         // If a transaction fails, it must be repeated from scratch because Titan is forgetful
         for (int i = 0; i < REPEAT_COMMITS; i++) {
-            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraphBtachLoading(name).newTransaction();
+            MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraphBatchLoading(name).newTransaction();
             try {
 
                 batch.load(transaction);

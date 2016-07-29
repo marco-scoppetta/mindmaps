@@ -16,7 +16,7 @@
  * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
  */
 
-package io.mindmaps.core;
+package io.mindmaps.postprocessing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

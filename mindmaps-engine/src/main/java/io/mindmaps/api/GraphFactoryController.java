@@ -19,6 +19,7 @@
 package io.mindmaps.api;
 
 
+import io.mindmaps.conf.ConfigProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,20 +32,20 @@ import static spark.Spark.get;
 
 public class GraphFactoryController {
     private final Logger LOG = LoggerFactory.getLogger(GraphFactoryController.class);
-    private final String CONFIG_FILE = "application.properties";
-    private final String GRAPH_CONFIG_PROPERTY = "graphdatabase.config";
+
 
     public GraphFactoryController() {
 
         Properties prop = new Properties();
         try {
-            prop.load(getClass().getClassLoader().getResourceAsStream(CONFIG_FILE));
+            prop.load(getClass().getClassLoader().getResourceAsStream(ConfigProperties.CONFIG_FILE));
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        String graphConfigFile = prop.getProperty(GRAPH_CONFIG_PROPERTY);
+        String graphConfigFile = prop.getProperty(ConfigProperties.GRAPH_CONFIG_PROPERTY);
 
+        //move to config properties
         get("/graph_factory", (req, res) -> {
             try {
                 return new String(Files.readAllBytes(Paths.get(graphConfigFile)));
