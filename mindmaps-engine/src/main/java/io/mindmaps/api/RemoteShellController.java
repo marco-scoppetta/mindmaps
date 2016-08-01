@@ -18,10 +18,11 @@
 
 package io.mindmaps.api;
 
-import io.mindmaps.conf.ConfigProperties;
+import io.mindmaps.util.ConfigProperties;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.parser.QueryParser;
+import io.mindmaps.util.RESTUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -38,16 +39,15 @@ public class RemoteShellController {
 
     private final Logger LOG = LoggerFactory.getLogger(RemoteShellController.class);
 
-
-    String graphName = ConfigProperties.getInstance().getProperty(ConfigProperties.GRAPH_NAME_PROPERTY);
+    String graphName = ConfigProperties.getInstance().getProperty(ConfigProperties.DEFAULT_GRAPH_NAME_PROPERTY);
 
     public RemoteShellController() {
 
-        redirect.get("/", "/dashboard");
+        redirect.get(RESTUtil.WebPath.HOME_URI, RESTUtil.WebPath.MATCH_QUERY_URI);
 
-        get("/match", this::matchQuery);
+        get(RESTUtil.WebPath.MATCH_QUERY_URI, this::matchQuery);
 
-        get("/metaTypeInstances", this::buildMetaTypeInstancesObject);
+        get(RESTUtil.WebPath.META_TYPE_INSTANCES_URI, this::buildMetaTypeInstancesObject);
     }
 
 
@@ -56,10 +56,10 @@ public class RemoteShellController {
         MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraph(graphName).newTransaction();
 
         JSONObject responseObj = new JSONObject();
-        responseObj.put("roles", new JSONArray(transaction.getMetaRoleType().instances().stream().map(x -> x.getId()).toArray()));
-        responseObj.put("entities", new JSONArray(transaction.getMetaEntityType().instances().stream().map(x -> x.getId()).toArray()));
-        responseObj.put("relations", new JSONArray(transaction.getMetaRelationType().instances().stream().map(x -> x.getId()).toArray()));
-        responseObj.put("resources", new JSONArray(transaction.getMetaResourceType().instances().stream().map(x -> x.getId()).toArray()));
+        responseObj.put(RESTUtil.Response.ROLES_JSON_FIELD, new JSONArray(transaction.getMetaRoleType().instances().stream().map(x -> x.getId()).toArray()));
+        responseObj.put(RESTUtil.Response.ENTITIES_JSON_FIELD, new JSONArray(transaction.getMetaEntityType().instances().stream().map(x -> x.getId()).toArray()));
+        responseObj.put(RESTUtil.Response.RELATIONS_JSON_FIELD, new JSONArray(transaction.getMetaRelationType().instances().stream().map(x -> x.getId()).toArray()));
+        responseObj.put(RESTUtil.Response.RESOURCES_JSON_FIELD, new JSONArray(transaction.getMetaResourceType().instances().stream().map(x -> x.getId()).toArray()));
 
         return responseObj.toString();
     }
@@ -68,10 +68,10 @@ public class RemoteShellController {
 
         QueryParser parser = QueryParser.create(GraphFactory.getInstance().getGraph(graphName).newTransaction());
 
-        LOG.info("[ Received match query: \"" + req.queryParams("query") + "\"]");
+        LOG.info("[ Received match query: \"" + req.queryParams(RESTUtil.Request.QUERY_FIELD) + "\"]");
 
         try {
-            return parser.parseMatchQuery(req.queryParams("query"))
+            return parser.parseMatchQuery(req.queryParams(RESTUtil.Request.QUERY_FIELD))
                     .resultsString()
                     .map(x -> x.replaceAll("\u001B\\[\\d+[m]", ""))
                     .collect(Collectors.joining("\n"));

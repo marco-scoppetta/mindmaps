@@ -18,13 +18,13 @@
 
 package io.mindmaps.loader;
 
-import io.mindmaps.conf.ConfigProperties;
-import io.mindmaps.postprocessing.Cache;
 import io.mindmaps.core.exceptions.MindmapsValidationException;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.query.QueryBuilder;
 import io.mindmaps.graql.api.query.Var;
+import io.mindmaps.postprocessing.Cache;
+import io.mindmaps.util.ConfigProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,22 +38,21 @@ public class BlockingLoader {
 
     private final Logger LOG = LoggerFactory.getLogger(BlockingLoader.class);
 
-
     private ExecutorService executor;
     private Cache cache;
     private Collection<Var> batch;
     private int batchSize;
     private static Semaphore transactionsSemaphore;
-    private static final int REPEAT_COMMITS = 5;
+    private static int repeatCommits;
     private String graphName;
 
     public BlockingLoader(String graphNameInit) {
 
         ConfigProperties prop = ConfigProperties.getInstance();
 
-        int numThreads = Integer.parseInt(prop.getProperty(ConfigProperties.NUM_THREADS_PROPERTY));
-        batchSize = Integer.parseInt(prop.getProperty(ConfigProperties.BATCH_SIZE_PROPERTY));
-
+        int numThreads = prop.getPropertyAsInt(ConfigProperties.NUM_THREADS_PROPERTY);
+        batchSize = prop.getPropertyAsInt(ConfigProperties.BATCH_SIZE_PROPERTY);
+        repeatCommits = prop.getPropertyAsInt(ConfigProperties.LOADER_REPEAT_COMMITS);
         graphName = graphNameInit;
         cache = Cache.getInstance();
 
@@ -103,7 +102,7 @@ public class BlockingLoader {
     private List<String> loadData(String name, Collection<Var> batch) {
         List<String> errors = new ArrayList<>();
 
-        for (int i = 0; i < REPEAT_COMMITS; i++) {
+        for (int i = 0; i < repeatCommits; i++) {
             MindmapsTransactionImpl transaction = (MindmapsTransactionImpl) GraphFactory.getInstance().getGraphBatchLoading(name).newTransaction();
             try {
 
@@ -141,9 +140,9 @@ public class BlockingLoader {
             }
         }
 
-        //If we reach this point it means the transaction failed REPEAT_COMMITS times
+        //If we reach this point it means the transaction failed repeatCommits times
         transactionsSemaphore.release();
-        errors.add("Could not commit to graph after " + REPEAT_COMMITS + " retries");
+        errors.add("Could not commit to graph after " + repeatCommits + " retries");
         return errors;
     }
 

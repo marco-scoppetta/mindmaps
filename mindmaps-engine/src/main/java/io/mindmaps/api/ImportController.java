@@ -18,13 +18,13 @@
 
 package io.mindmaps.api;
 
-import io.mindmaps.conf.ConfigProperties;
+import io.mindmaps.util.ConfigProperties;
 import io.mindmaps.core.dao.MindmapsTransaction;
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.graql.api.parser.QueryParser;
 import io.mindmaps.graql.api.query.Var;
-import io.mindmaps.graql.internal.query.VarImpl;
 import io.mindmaps.loader.BlockingLoader;
+import io.mindmaps.util.RESTUtil;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +45,7 @@ public class ImportController {
 
     private final org.slf4j.Logger LOG = LoggerFactory.getLogger(ImportController.class);
 
+
     private int batchSize;
     private String graphName;
 
@@ -56,44 +57,42 @@ public class ImportController {
 
 
     public ImportController() {
-        new ImportController(ConfigProperties.getInstance().getProperty(ConfigProperties.GRAPH_NAME_PROPERTY));
+        new ImportController(ConfigProperties.getInstance().getProperty(ConfigProperties.DEFAULT_GRAPH_NAME_PROPERTY));
     }
 
     public ImportController(String graphNameInit) {
 
-        post("/importDataFromFile/", (req, res) -> {
+        // These two functions still block. Create new thread
+
+        post(RESTUtil.WebPath.IMPORT_DATA_URI, (req, res) -> {
             JSONObject bodyObject = new JSONObject(req.body());
-            importDataFromFile(bodyObject.get("path").toString());
-            return "ok";
+            importDataFromFile(bodyObject.get(RESTUtil.Request.PATH_FIELD).toString());
+            return null;
         });
 
-        post("/importOntologyFromFile/", (req, res) -> {
+        post(RESTUtil.WebPath.IMPORT_ONTOLOGY_URI, (req, res) -> {
             JSONObject bodyObject = new JSONObject(req.body());
-            loadOntologyFromFile(bodyObject.get("path").toString());
-            return "ok";
+            loadOntologyFromFile(bodyObject.get(RESTUtil.Request.PATH_FIELD).toString());
+            return null;
         });
 
         entitiesMap = new ConcurrentHashMap<>();
         relationshipsList = new ArrayList<>();
-        batchSize = Integer.parseInt(ConfigProperties.getInstance().getProperty(ConfigProperties.BATCH_SIZE_PROPERTY));
+        batchSize = ConfigProperties.getInstance().getPropertyAsInt(ConfigProperties.BATCH_SIZE_PROPERTY);
         graphName = graphNameInit;
         loader = new BlockingLoader(graphName);
 
     }
 
     public void importDataFromFile(String dataFile) {
-
-        BiPredicate<String, List<Var>> parseEntity = this::parseEntity;
-        BiPredicate<String, List<Var>> parseRelation = this::parseRelation;
-
         try {
-            scanFile(parseEntity, dataFile);
-            scanFile(parseRelation, dataFile);
+            scanFile(this::parseEntity, dataFile);
+            loader.waitToFinish();
+            scanFile(this::parseRelation, dataFile);
             loader.waitToFinish();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
 
@@ -191,14 +190,14 @@ public class ImportController {
         MindmapsTransaction transaction = GraphFactory.getInstance().getGraph(graphName).newTransaction();
 
         try {
-            LOG.info("============  LOADING ONTOLOGY ==============");
+            LOG.info("[ Loading new ontology .. ]");
 
             List<String> lines = Files.readAllLines(Paths.get(ontologyFile), StandardCharsets.UTF_8);
             String query = lines.stream().reduce("", (s1, s2) -> s1 + "\n" + s2);
             QueryParser.create(transaction).parseInsertQuery(query).execute();
             transaction.commit();
 
-            LOG.info("=============  ONTOLOGY LOADED ==============");
+            LOG.info("[ Ontology loaded. ]");
         } catch (Exception e) {
             e.printStackTrace();
         }

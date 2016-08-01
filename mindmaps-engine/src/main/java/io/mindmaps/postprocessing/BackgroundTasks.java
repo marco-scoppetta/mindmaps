@@ -20,6 +20,7 @@ package io.mindmaps.postprocessing;
 
 import io.mindmaps.factory.GraphFactory;
 import io.mindmaps.loader.QueueManager;
+import io.mindmaps.util.ConfigProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,6 @@ public class BackgroundTasks {
 
     private Cache cache;
 
-    private int NUM_THREADS = 20; // read from config file
 
     public static synchronized BackgroundTasks getInstance() {
         if (instance == null)
@@ -55,7 +55,7 @@ public class BackgroundTasks {
 
     private BackgroundTasks() {
         conceptFixer = new ConceptFixer(cache, GraphFactory.getInstance());
-        postpool = Executors.newFixedThreadPool(NUM_THREADS);
+        postpool = Executors.newFixedThreadPool(ConfigProperties.getInstance().getPropertyAsInt(ConfigProperties.NUM_THREADS_PROPERTY));
         statDump = Executors.newSingleThreadExecutor();
         cache = Cache.getInstance();
     }

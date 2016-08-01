@@ -19,14 +19,14 @@
 package io.mindmaps.api;
 
 
-import io.mindmaps.conf.ConfigProperties;
+import io.mindmaps.util.ConfigProperties;
+import io.mindmaps.util.RESTUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Properties;
 
 import static spark.Spark.get;
 
@@ -39,7 +39,7 @@ public class GraphFactoryController {
 
         graphConfig = ConfigProperties.getInstance().getProperty(ConfigProperties.GRAPH_CONFIG_PROPERTY);
 
-        get("/graph_factory", (req, res) -> {
+        get(RESTUtil.WebPath.GRAPH_FACTORY_URI, (req, res) -> {
             try {
                 return new String(Files.readAllBytes(Paths.get(graphConfig)));
             } catch (IOException e) {

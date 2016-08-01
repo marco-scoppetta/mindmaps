@@ -18,7 +18,7 @@
 
 package io.mindmaps.loader;
 
-import io.mindmaps.conf.ConfigProperties;
+import io.mindmaps.util.ConfigProperties;
 import io.mindmaps.postprocessing.Cache;
 import io.mindmaps.core.exceptions.MindmapsValidationException;
 import io.mindmaps.core.implementation.MindmapsTransactionImpl;
@@ -55,7 +55,7 @@ public class Loader {
         flushToCache = Executors.newFixedThreadPool(10);
         queueManager = QueueManager.getInstance();
         cache = Cache.getInstance();
-        graphName= ConfigProperties.getInstance().getProperty(ConfigProperties.GRAPH_NAME_PROPERTY);
+        graphName= ConfigProperties.getInstance().getProperty(ConfigProperties.DEFAULT_GRAPH_NAME_PROPERTY);
     }
 
     private interface LoadableBatch {

@@ -1,6 +1,6 @@
 package io.mindmaps.api;
 
-import io.mindmaps.conf.ConfigProperties;
+import io.mindmaps.util.ConfigProperties;
 import io.mindmaps.factory.GraphFactory;
 import org.junit.After;
 import org.junit.Assert;
@@ -20,7 +20,7 @@ public class ImportControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        graphName = prop.getProperty(ConfigProperties.GRAPH_NAME_PROPERTY);
+        graphName = prop.getProperty(ConfigProperties.DEFAULT_GRAPH_NAME_PROPERTY);
         try {
             prop.load(ImportControllerTest.class.getClassLoader().getResourceAsStream(ConfigProperties.CONFIG_TEST_FILE));
         } catch (Exception e) {

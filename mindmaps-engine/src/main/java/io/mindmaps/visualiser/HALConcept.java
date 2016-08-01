@@ -21,7 +21,7 @@ package io.mindmaps.visualiser;
 import com.theoryinpractise.halbuilder.api.Representation;
 import com.theoryinpractise.halbuilder.api.RepresentationFactory;
 import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
-import io.mindmaps.conf.ConfigProperties;
+import io.mindmaps.util.ConfigProperties;
 import io.mindmaps.core.model.*;
 
 

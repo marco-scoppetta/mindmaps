@@ -18,11 +18,8 @@
 
 package io.mindmaps.factory;
 
-import io.mindmaps.conf.ConfigProperties;
+import io.mindmaps.util.ConfigProperties;
 import io.mindmaps.core.dao.MindmapsGraph;
-
-import java.io.IOException;
-import java.util.Properties;
 
 public class GraphFactory {
 

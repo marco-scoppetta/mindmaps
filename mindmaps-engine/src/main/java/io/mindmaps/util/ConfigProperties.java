@@ -16,7 +16,7 @@
  * along with MindmapsDB. If not, see <http://www.gnu.org/licenses/gpl.txt>.
  */
 
-package io.mindmaps.conf;
+package io.mindmaps.util;
 
 import java.util.Properties;
 
@@ -24,14 +24,23 @@ public class ConfigProperties {
 
     public static final String CONFIG_FILE = "application.properties";
     public static final String CONFIG_TEST_FILE = "application-test.properties";
+
     public static final String GRAPH_CONFIG_PROPERTY = "graphdatabase.config";
-    public static final String GRAPH_NAME_PROPERTY = "graphdatabase.default-graph-name";
+    public static final String DEFAULT_GRAPH_NAME_PROPERTY = "graphdatabase.default-graph-name";
+
     public static final String BATCH_SIZE_PROPERTY = "blockingLoader.batch-size";
     public static final String NUM_THREADS_PROPERTY = "blockingLoader.num-threads";
+
     public static final String SERVER_HOST_NAME = "server.host";
     public static final String SERVER_PORT_NUMBER = "server.port";
+
     public static final String HAL_DEGREE_PROPERTY = "halBuilder.degree";
     public static final String HAL_RESOURCE_PREFIX = "halBuilder.resource-prefix";
+
+    public static final String LOADER_REPEAT_COMMITS = "loader.repeat-commits";
+
+    public static final String MAINTENANCE_ITERATION = "backgroundTasks.maintenance-iteration";
+
 
     private Properties prop;
     private static ConfigProperties instance = null;
@@ -54,4 +63,5 @@ public class ConfigProperties {
     public String getProperty(String property){
         return prop.getProperty(property);
     }
+    public int getPropertyAsInt(String property) {return Integer.parseInt(prop.getProperty(property));}
 }

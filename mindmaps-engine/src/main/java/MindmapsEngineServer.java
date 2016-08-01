@@ -22,6 +22,7 @@ import io.mindmaps.api.GraphFactoryController;
 import io.mindmaps.api.ImportController;
 import io.mindmaps.api.RemoteShellController;
 import io.mindmaps.api.VisualiserController;
+import io.mindmaps.util.ConfigProperties;
 import spark.Spark;
 
 import java.util.Properties;
@@ -29,10 +30,6 @@ import java.util.Properties;
 import static spark.Spark.port;
 
 public class MindmapsEngineServer {
-
-    private static final String CONFIG_FILE = "application.properties";
-    private static final String SERVER_PORT_PROPERTY = "server.port";
-
 
     public static void main(String[] args) {
 
@@ -48,15 +45,10 @@ public class MindmapsEngineServer {
         logger.setLevel(Level.INFO);
 
 
-        Properties prop = new Properties();
-        try {
-            prop.load(MindmapsEngineServer.class.getClassLoader().getResourceAsStream(CONFIG_FILE));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        ConfigProperties prop = ConfigProperties.getInstance();
 
         // Listening port
-        port(Integer.parseInt(prop.getProperty(SERVER_PORT_PROPERTY)));
+        port(prop.getPropertyAsInt(ConfigProperties.SERVER_PORT_NUMBER));
 
         // --------------------------------- //
 
