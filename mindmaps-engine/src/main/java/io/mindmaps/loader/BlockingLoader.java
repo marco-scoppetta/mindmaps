@@ -46,14 +46,14 @@ public class BlockingLoader {
     private static int repeatCommits;
     private String graphName;
 
-    public BlockingLoader(String graphNameInit) {
+    public BlockingLoader(String graphNameParam) {
 
         ConfigProperties prop = ConfigProperties.getInstance();
 
         int numThreads = prop.getPropertyAsInt(ConfigProperties.NUM_THREADS_PROPERTY);
         batchSize = prop.getPropertyAsInt(ConfigProperties.BATCH_SIZE_PROPERTY);
         repeatCommits = prop.getPropertyAsInt(ConfigProperties.LOADER_REPEAT_COMMITS);
-        graphName = graphNameInit;
+        graphName = graphNameParam;
         cache = Cache.getInstance();
 
         executor = Executors.newFixedThreadPool(numThreads);

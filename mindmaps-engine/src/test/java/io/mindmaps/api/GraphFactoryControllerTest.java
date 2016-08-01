@@ -46,7 +46,7 @@ public class GraphFactoryControllerTest {
         Logger logger = (Logger) org.slf4j.LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         logger.setLevel(Level.INFO);
         try {
-            prop.load(ImportControllerTest.class.getClassLoader().getResourceAsStream(ConfigProperties.CONFIG_TEST_FILE));
+            prop.load(GraphFactoryControllerTest.class.getClassLoader().getResourceAsStream(ConfigProperties.CONFIG_TEST_FILE));
         } catch (Exception e) {
             e.printStackTrace();
         }
