@@ -41,6 +41,10 @@ import java.util.function.BiPredicate;
 
 import static spark.Spark.post;
 
+/**
+ * Class that provides methods to import ontologies and data from a Graql file to a graph.
+ */
+
 public class ImportController {
 
     private final org.slf4j.Logger LOG = LoggerFactory.getLogger(ImportController.class);
